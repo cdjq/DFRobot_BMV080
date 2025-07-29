@@ -1,0 +1,353 @@
+/*!
+ * @file DFRobot_BMV080.h
+ * @brief Declaration the basic structure of class DFRobot_BMV080
+ * @n Support IIC and SPI communication interfaces
+ * @n Used the official SDK of Bosch
+ * @n Can obtain PM1, PM2.5, PM10
+ * @copyright	Copyright (c) 2010 DFRobot Co.Ltd (http://www.dfrobot.com)
+ * @license The MIT License (MIT)
+ * @author [Ouki](ouki.wang@dfrobot.com)
+ * @version V1.0
+ * @date 2025-07-4
+ * @url https://github.com/DFRobot/DFRobot_BMV080
+ */
+
+#ifndef __DFROBOT_BMV080_H
+#define __DFROBOT_BMV080_H
+
+#include <Arduino.h>
+#include "bmv080.h"
+#include "bmv080_defs.h"
+#include <Wire.h>
+#include <SPI.h>
+
+#define DBG(...) {Serial.print("[");Serial.print(__FUNCTION__); Serial.print("(): "); Serial.print(__LINE__); Serial.print(" ] "); Serial.println(__VA_ARGS__);}
+
+#define DFRobot_BMV080_I2C_ADDR 0x57
+
+#define DFRobot_BMV080_MODE_CONTINUOUS  0 ///< Continuous mode, sensor takes measurements continuously
+#define DFRobot_BMV080_MODE_DUTY_CYCLE  1 ///< Duty cycle mode, sensor takes measurements at specified intervals
+
+class DFRobot_BMV080 {
+public:
+  #define ERR_OK            0      ///< 无错误
+  #define ERR_DATA_BUS      1      ///< 数据总线错误
+  #define ERR_DATA_READ     2      ///< 数据总线错误
+  #define ERR_IC_VERSION    3     ///< 芯片版本不匹配
+
+public: 
+
+  bool devClass = true; // true for I2C, false for SPI
+  /**
+   * @fn DFRobot_BMV080
+   * @brief Constructor of DFRobot_BMV080 class
+   * @retunr None
+   */
+  DFRobot_BMV080(void);
+
+  virtual uint8_t writeReg(uint16_t reg, const uint16_t* pBuf, size_t size) = 0;
+  virtual uint8_t readReg(uint16_t reg, uint16_t* pBuf, size_t size) = 0;
+  /**
+   * @fn BMV080_write_16bit_cb
+   * @brief Callback function for writing 16-bit data to the BMV080 sensor
+   * @n This function is used to write 16-bit data to the BMV080 sensor via a serial communication interface.
+   * @n This function is used internally by the BMV080 driver to write data to the sensor.
+   * @param sercom_handle: Handle for the serial communication interface
+   * @param reg: Register address to write to
+   * @param data: Pointer to the data to write
+   * @param size: Size of the data to write in bytes
+   * @return Returns E_BMV080_OK if successful, otherwise returns a BMV080 status code.
+   */
+  static int8_t BMV080_write_16bit_cb(bmv080_sercom_handle_t, uint16_t, const uint16_t*, uint16_t);
+
+  /**
+   * @fn BMV080_read_16bit_cb
+   * @brief Callback function for reading 16-bit data from the BMV080 sensor
+   * @note This function is used to read 16-bit data from the BMV080 sensor via a serial communication interface.
+   * @note This function is used internally by the BMV080 driver to read data from the sensor.
+   * @param sercom_handle: Handle for the serial communication interface
+   * @param reg: Register address to read from
+   * @param data: Pointer to store the read data
+   * @param size: Size of the data to read in bytes
+   * @return Returns E_BMV080_OK if successful, otherwise returns a BMV080 status code.
+   */
+  static int8_t BMV080_read_16bit_cb(bmv080_sercom_handle_t, uint16_t, uint16_t*, uint16_t);
+
+  /**
+   * @fn getBmv080Data_cb
+   * @brief Callback function to handle BMV080 data
+   * @note This function is called when new data is available from the BMV080 sensor.
+   * @param bmv080_output: The output data from the BMV080 sensor
+   * @param cb_parameters: Pointer to user-defined parameters for the callback
+   */
+  static void getBmv080Data_cb(bmv080_output_t bmv080_output, void *cb_parameters);
+
+  /**
+   * @fn BMV080_delay_cb
+   * @brief Callback function to handle delay
+   * @note This function is called when the BMV080 sensor needs to delay.
+   * @param delay_ms: The delay in milliseconds
+   * @return int8_t: The status of the delay
+   */
+  static int8_t BMV080_delay_cb(uint32_t);
+
+  /**
+   * @fn BMV080_delay_cycling_cb
+   * @brief Callback function to handle delay for duty cycling
+   * @note This function is called when the BMV080 sensor needs to delay for duty cycling.
+   * @return uint32_t: The current time in milliseconds
+   */
+  static uint32_t BMV080_delay_cycling_cb(void);
+
+  /**
+   * @fn openBmv080
+   * @brief Initialize the BMV080 sensor
+   * @pre Must be called first in order to create the _handle_ required by other functions.
+   * @post The _handle_ must be destroyed via _bmv080_close_.
+   * @note It must be called before any other functions that interact with the sensor.
+   * @return int: Returns ERR_OK if successful, otherwise returns an error code.
+   */
+  uint8_t openBmv080(void);
+
+  /**
+   * @fn closeBmv080
+   * @brief Close the sensor unit.
+   * @pre Must be called last in order to destroy the _handle_ created by _bmv080_open_.
+   * @return bool: Returns true if successful, otherwise returns false.
+   */
+  bool closeBmv080(void);
+
+  /**
+   * @fn resetBmv080
+   * @brief Reset a sensor unit including both hardware and software.
+   * @pre A valid _handle_ generated by _bmv080_open_ is required. 
+   * @post Any parameter changed through _bmv080_set_parameter_ is reverted back to its default.
+   * @return bool: Returns true if successful, otherwise returns false.
+   */
+  bool resetBmv080(void);
+
+  /**
+   * @fn getBmv080DV
+   * @brief Get the BMV080 sensor's driver version
+   * @param major: Major version number
+   * @param minor: Minor version number
+   * @param patch: Patch version number
+   * @return bool: Returns true if successful, otherwise returns false.
+   */
+  bool getBmv080DV(uint16_t &major, uint16_t &minor, uint16_t &patch);
+
+  /**
+   * @fn getBmv080ID
+   * @brief Get the version information of this sensor driver.
+   * @param id: Unique ID
+   * @return bool: Returns true if successful, otherwise returns false.
+   */
+  bool getBmv080ID(char *id);
+
+  /**
+   * @fn getBmv080Data
+   * @brief Get the BMV080 sensor's data
+   * @param PM1: PM1.0 concentration
+   * @param PM2_5: PM2.5 concentration
+   * @param PM10: PM10 concentration
+   * @note This function should be called at least once every 1 second.
+   * @return 1 successful, when the BMV080 sensor data is ready.
+   * @return 0 unsuccessful, when the BMV080 sensor data is not ready.
+   */
+  bool getBmv080Data(float *PM1, float *PM2_5, float *PM10);
+
+  /**
+   * @fn get_bmv080Data
+   * @brief Assign the data of BMV080 to the variable bmv080_output_t.
+   * @param bmv080_output: Output structure containing the BMV080 sensor data
+   * @note This fuction is called in the callback function getBmv080Data_cb.
+   * @return bool: Returns true if successful, otherwise returns false.
+   */
+  bool get_bmv080Data(bmv080_output_t bmv080_output);
+
+  /**
+   * @fn setBmv080Mode
+   * @brief Set the BMV080 sensor's mode.
+   * @param mode: The mode to set, either DFRobot_BMV080_MODE_CONTINUOUS or DFRobot_BMV080_MODE_DUTY_CYCLE
+   *              DFRobot_BMV080_MODE_CONTINUOUS: Sensor takes measurements continuously
+   *              DFRobot_BMV080_MODE_DUTY_CYCLE: Sensor takes measurements at specified intervals
+   * @return 1 successful
+   * @return 0 error
+   */
+  bool setBmv080Mode(uint8_t mode);
+
+  /**
+   * @fn stopBmv080
+   * @brief Stop particle measurement.
+   * @pre Must be called at the end of a data acquisition cycle to ensure that the sensor unit is ready for the next measurement cycle.
+   * @return 1 successful
+   * @return 0 error 
+   */
+  bool stopBmv080(void);
+
+  /**
+   * @fn setIntegrationTime
+   * @brief Measurement window.
+   * @note In duty cycling mode, this measurement window is also the sensor ON time.
+   * @param integration_time The measurement integration time in milliseconds (ms).
+   * @return 1 successful
+   * @return 0 error
+   */
+  bool setIntegrationTime(float integration_time);
+
+  /**
+   * @fn getIntegrationTime
+   * @brief Get the current integration time.
+   * @return The current integration time in milliseconds (ms).
+   */
+  float getIntegrationTime(void);
+
+  /**
+   * @fn setDutyCyclingPeriod
+   * @brief Set the duty cycling period.
+   * @n Duty cycling period (sum of integration time and sensor OFF / sleep time).
+   * @note This must be greater than integration time by at least 2 seconds.
+   * @param duty_cycling_period The duty cycling period in milliseconds (ms).
+   * @return 1 successful
+   * @return 0 error
+   */
+  bool setDutyCyclingPeriod(uint16_t duty_cycling_period);
+
+  /**
+   * @fn getDutyCyclingPeriod
+   * @brief Get the current duty cycling period.
+   * @param duty_cycling_period The duty cycling period in milliseconds (ms).
+   * @return 1 successful
+   * @return 0 error
+   */
+  bool getDutyCyclingPeriod(uint16_t *duty_cycling_period);
+
+  /**
+   * @fn setObstructionDetection
+   * @brief Set if obstruction detection feature is enabled.
+   * @param obstructed true to enable obstruction detection, false to disable.
+   * @return 1 successful
+   * @return 0 error
+   */
+  bool setObstructionDetection(bool obstructed);
+
+  /**
+   * @fn getObstructionDetection
+   * @brief Get if obstruction detection feature is enabled.
+   * @return 1 if obstruction detection is enabled.
+   * @return 0 if obstruction detection is disabled.
+   */
+  bool getObstructionDetection(void);
+
+  /**
+   * @fn ifObstructed
+   * @brief Check whether the sensor receiver is blocked.
+   * @return 1 Obstructed
+   * @return 0 not obstructed
+   */
+  bool ifObstructed(void);
+
+    /**
+   * @fn setDoVibrationFiltering
+   * @brief Enable or disable the Do Vibration Filtering feature.
+   * @param do_vibration_filtering 1 to enable, 0 to disable.
+   * @return 1 successful
+   * @return 0 error
+   */
+  bool setDoVibrationFiltering(bool do_vibration_filtering);
+
+  /**
+   * @fn getDoVibrationFiltering
+   * @brief Get the status of the Do Vibration Filtering feature.
+   * @return 1 if vibration filtering is enabled.
+   * @return 0 if vibration filtering is disabled.
+   */
+  bool getDoVibrationFiltering(void);
+
+  /**
+   * @fn setMeasurementAlgorithm
+   * @brief Set the measurement algorithm.
+   * @param measurement_algorithm The measurement algorithm to use.
+   *                              E_BMV080_MEASUREMENT_ALGORITHM_FAST_RESPONSE
+   *                              E_BMV080_MEASUREMENT_ALGORITHM_BALANCED
+   *                              E_BMV080_MEASUREMENT_ALGORITHM_HIGH_PRECISION
+   * @return 1 successful
+   * @return 0 error
+   */
+  bool setMeasurementAlgorithm(uint8_t measurement_algorithm);
+
+  /**
+   * @fn getMeasurementAlgorithm
+   * @brief Get the current measurement algorithm.
+   * @return The current measurement algorithm.
+   *         E_BMV080_MEASUREMENT_ALGORITHM_FAST_RESPONSE
+   *         E_BMV080_MEASUREMENT_ALGORITHM_BALANCED
+   *         E_BMV080_MEASUREMENT_ALGORITHM_HIGH_PRECISION
+   */
+  uint8_t getMeasurementAlgorithm(void);
+
+private:
+  
+  bmv080_handle_t _bmv080_handle_class = NULL;  // Handle for the BMV080 sensor.
+  bmv080_output_t _bmv080Data; // BMV080 sensor data.
+  bool _bmv080DataOK = false; // Flag to indicate if BMV080 data is ready.
+};
+
+class DFRobot_BMV080_I2C:public DFRobot_BMV080{
+public:
+  /**
+   * @fn DFRobot_BMV080_I2C
+   * @brief Constructor of DFRobot_BMV080_I2C class
+   * @param Wire: Pointer to the TwoWire object for I2C communication
+   * @note This constructor initializes the I2C communication interface for the BMV080 sensor
+   */
+  DFRobot_BMV080_I2C(TwoWire *Wire, uint8_t deviceAddr = DFRobot_BMV080_I2C_ADDR);
+
+  /**
+   * @fn begin
+   * @brief Check for the presence of IIC devices.
+   * @return 0 if the device is present.
+   * @return -1 if the device is not present.
+   */
+  int begin(void);
+  
+  /**
+   * @fn writeReg
+   * @brief Write data to a register.
+   * @param reg: The register address to write to.
+   * @param pBuf: Pointer to the data buffer to write.
+   * @param size: Size of the data buffer in bytes.
+   * @return 0 if successful.
+   * @return -1 if an error occurred.
+   */
+  uint8_t writeReg(uint16_t reg, const uint16_t* pBuf, size_t size);
+
+  /**
+   * @fn readReg
+   * @brief Read data from a register.
+   * @param reg: The register address to read from.
+   * @param pBuf: Pointer to the buffer to store the read data.
+   * @param size: Size of the buffer in bytes.
+   * @return The number of bytes read if successful.
+   * @return 0 if an error occurred.
+   */
+  uint8_t readReg(uint16_t reg, uint16_t* pBuf, size_t size);
+
+  TwoWire *_pWire; // Pointer to the TwoWire object for I2C communication.
+  uint8_t _deviceAddr; // I2C device address.
+};
+
+class DFRobot_BMV080_SPI:public DFRobot_BMV080{
+public: 
+  DFRobot_BMV080_SPI(SPIClass *spi=&SPI, uint8_t csPin=4);
+  int begin(void);
+
+  uint8_t writeReg(uint16_t reg, const uint16_t* pBuf, size_t size);
+  uint8_t readReg(uint16_t reg, uint16_t* pBuf, size_t size);
+
+private:
+  SPIClass *_pSpi;
+  uint8_t _csPin; 
+};
+
+#endif
