@@ -26,7 +26,7 @@ DFRobot_BMV080_I2C sensor(&Wire, 0x57); // Create an instance of the DFRobot_BMV
 //DFRobot_BMV080_SPI sensor(&SPI,SPI_CS_PIN); // Create an instance of the DFRobot_BMV080_SPI class with the SPI CS pin.
 
 #define DUTY_CYCLE_PERIOD 20 // Duty cycle period in seconds.
-
+#define INTEGRATION_TIME 10.0f // Integration Time in seconds.
 
 void setup() {
   char id[13]; // Variable to store the chip ID of the BMV080 sensor.
@@ -49,9 +49,22 @@ void setup() {
   sensor.getBmv080ID(id);
   Serial.println("Chip ID is:" + String(id));
   // Set the duty cycling period of the BMV080 sensor.
-  if(sensor.setDutyCyclingPeriod(DUTY_CYCLE_PERIOD)){
-    Serial.print("The measurement period has been set to: ");
-    Serial.println(DUTY_CYCLE_PERIOD);
+  if(!sensor.setDutyCyclingPeriod(DUTY_CYCLE_PERIOD)){
+    Serial.println("The measurement period set error!");
+  }
+  Serial.print("The measurement period is set to:");
+  Serial.println(sensor.getDutyCyclingPeriod());
+  // Set the integration time of the BMV080 sensor.
+  if(!sensor.setIntegrationTime(INTEGRATION_TIME)){
+    Serial.println("The integration time set error!");
+  }
+  Serial.print("The integration time is set to:");
+  Serial.println(sensor.getIntegrationTime());
+  // enable obstacle detection.
+  if(sensor.setObstructionDetection(true)){
+    Serial.println("Obstacle detection enable sucessful.");
+  }else{
+    Serial.println("Obstacle detection failed to open.");
   }
   // Set the measurement mode to duty cycle mode.
   if(sensor.setBmv080Mode(DFRobot_BMV080_MODE_DUTY_CYCLE))
