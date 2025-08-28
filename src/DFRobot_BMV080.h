@@ -189,7 +189,7 @@ public:
    * @fn setIntegrationTime
    * @brief Measurement window.
    * @note In duty cycling mode, this measurement window is also the sensor ON time.
-   * @param integration_time The measurement integration time in milliseconds (ms).
+   * @param integration_time The measurement integration time in seconds (s).
    * @return 1 successful
    * @return 0 error
    */
@@ -198,7 +198,7 @@ public:
   /**
    * @fn getIntegrationTime
    * @brief Get the current integration time.
-   * @return The current integration time in milliseconds (ms).
+   * @return The current integration time in seconds (s).
    */
   float getIntegrationTime(void);
 
@@ -207,7 +207,7 @@ public:
    * @brief Set the duty cycling period.
    * @n Duty cycling period (sum of integration time and sensor OFF / sleep time).
    * @note This must be greater than integration time by at least 2 seconds.
-   * @param duty_cycling_period The duty cycling period in milliseconds (ms).
+   * @param duty_cycling_period The duty cycling period in seconds (s).
    * @return 1 successful
    * @return 0 error
    */
@@ -216,11 +216,10 @@ public:
   /**
    * @fn getDutyCyclingPeriod
    * @brief Get the current duty cycling period.
-   * @param duty_cycling_period The duty cycling period in milliseconds (ms).
-   * @return 1 successful
+   * @return The current duty cycling period in seconds (s).
    * @return 0 error
    */
-  bool getDutyCyclingPeriod(uint16_t *duty_cycling_period);
+  uint16_t getDutyCyclingPeriod(void);
 
   /**
    * @fn setObstructionDetection

@@ -159,10 +159,10 @@ float DFRobot_BMV080::getIntegrationTime(void)
 {
   float integration_time = 0.0f;
 
-  bmv080_status_code_t bmv080_status = bmv080_set_parameter(_bmv080_handle_class, "integration_time", (void *)&integration_time);
+  bmv080_status_code_t bmv080_status = bmv080_get_parameter(_bmv080_handle_class, "integration_time", (void *)&integration_time);
 
   if(bmv080_status != E_BMV080_OK) {
-    DBG("setIntegrationTime failed, status is:" + String(bmv080_status));
+    //DBG("setIntegrationTime failed, status is:" + String(bmv080_status));
     return false;
   }
 
@@ -177,8 +177,9 @@ bool DFRobot_BMV080::setDutyCyclingPeriod(uint16_t duty_cycling_period)
   return (bmv080_status == E_BMV080_OK);
 }
 
-bool DFRobot_BMV080::getDutyCyclingPeriod(uint16_t *duty_cycling_period)
+uint16_t DFRobot_BMV080::getDutyCyclingPeriod(void)
 {
+  uint16_t duty_cycling_period = 0;
   bmv080_status_code_t bmv080_status = bmv080_get_parameter(_bmv080_handle_class, "duty_cycling_period", (void *)&duty_cycling_period);
 
   return (bmv080_status == E_BMV080_OK ? duty_cycling_period : 0);
@@ -188,7 +189,7 @@ bool DFRobot_BMV080::setObstructionDetection(bool obstructed)
 {
   bmv080_status_code_t bmv080_status = bmv080_set_parameter(_bmv080_handle_class, "do_obstruction_detection", (void *)&obstructed);
 
-  return (bmv080_status == E_BMV080_OK);
+  return (bmv080_status == E_BMV080_OK ? obstructed : false);
 }
 
 bool DFRobot_BMV080::getObstructionDetection(void)
@@ -196,7 +197,7 @@ bool DFRobot_BMV080::getObstructionDetection(void)
   bool obstructed = false;
   bmv080_status_code_t bmv080_status = bmv080_get_parameter(_bmv080_handle_class, "do_obstruction_detection", (void *)&obstructed);
 
-  return bmv080_status == E_BMV080_OK ? obstructed : false;
+  return (bmv080_status == E_BMV080_OK ? obstructed : false);
 }
 
 bool DFRobot_BMV080::ifObstructed(void)
