@@ -268,9 +268,9 @@ public:
    * @fn setMeasurementAlgorithm
    * @brief Set the measurement algorithm.
    * @param measurement_algorithm The measurement algorithm to use.
-   *                              E_BMV080_MEASUREMENT_ALGORITHM_FAST_RESPONSE
-   *                              E_BMV080_MEASUREMENT_ALGORITHM_BALANCED
-   *                              E_BMV080_MEASUREMENT_ALGORITHM_HIGH_PRECISION
+   *                              E_BMV080_MEASUREMENT_ALGORITHM_FAST_RESPONSE //Fast response,suitable for scenarios requiring quick response
+   *                              E_BMV080_MEASUREMENT_ALGORITHM_BALANCED //Balanced, suitable for scenarios where a balance needs to be struck between precision and rapid response
+   *                              E_BMV080_MEASUREMENT_ALGORITHM_HIGH_PRECISION //High precision, suitable for scenarios requiring high accuracy
    * @return 1 successful
    * @return 0 error
    */
