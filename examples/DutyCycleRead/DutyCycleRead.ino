@@ -49,7 +49,10 @@ void setup() {
   sensor.getBmv080ID(id);
   Serial.println("Chip ID is:" + String(id));
   // Set the duty cycling period of the BMV080 sensor.
-  sensor.setDutyCyclingPeriod(DUTY_CYCLE_PERIOD);
+  if(sensor.setDutyCyclingPeriod(DUTY_CYCLE_PERIOD)){
+    Serial.print("The measurement period has been set to: ");
+    Serial.println(DUTY_CYCLE_PERIOD);
+  }
   // Set the measurement mode to duty cycle mode.
   if(sensor.setBmv080Mode(DFRobot_BMV080_MODE_DUTY_CYCLE))
     Serial.println("Mode setting successful");
