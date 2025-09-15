@@ -73,7 +73,7 @@ BMV080 目前是世界上最小的 PM2.5 芯片，它采用激光进行测量。
    * @fn begin
    * @brief 检测是否传感器已连接
    * @return 0 已连接
-   * @return -1 未连接
+   * @return 1 未连接
    */
   int begin(void);
   
