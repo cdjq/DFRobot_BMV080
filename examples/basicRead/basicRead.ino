@@ -5,11 +5,11 @@
  * @n The demo supports FireBeetle-ESP32-E, FireBeetle-ESP32-S3, and FireBeetle-ESP8266.
  * @details Experimental phenomenon: The read data will be output in the serial port monitor.
  * 
- * @copyright Copyright (c) 2010 DFRobot Co.Ltd (http://www.dfrobot.com)
+ * @copyright Copyright (c) 2025 DFRobot Co.Ltd (http://www.dfrobot.com)
  * @license The MIT License (MIT)
- * @author [Ouki](ouki.wang@dfrobot.com)
+ * @author [lbx](liubx8023@gmail.com)
  * @version V1.0
- * @date 2025-07-28
+ * @date 2025-09-15
  * @url https://github.com/DFRobot/DFRobot_BMV080
  */
 
@@ -19,9 +19,9 @@
 SET_LOOP_TASK_STACK_SIZE(60 * 1024); // Set the stack size of the loop task to 60KB
 
 //You can choose to use either the IIC interface or the SPI interface. The default is IIC. 
-//If you want to use SPI, simply remove the following comments.
 DFRobot_BMV080_I2C sensor(&Wire, 0x57); // Create an instance of the DFRobot_BMV080_I2C class with the I2C address 0x57.
 
+/* If you want to use SPI, simply remove the following comments, and change the SPI_CS_PIN to the corresponding SPI CS pin.*/
 //#define SPI_CS_PIN 17
 //DFRobot_BMV080_SPI sensor(&SPI,SPI_CS_PIN); // Create an instance of the DFRobot_BMV080_SPI class with the SPI CS pin.
 
@@ -47,8 +47,12 @@ void setup() {
   sensor.getBmv080ID(id); 
   Serial.println("Chip ID is:" + String(id));
   // Set the measurement mode to continuous mode.
-  if(sensor.setBmv080Mode(DFRobot_BMV080_MODE_CONTINUOUS)) 
+  if(sensor.setBmv080Mode(CONTINUOUS_MODE)){
     Serial.println("Mode setting successful");
+  }else{
+    Serial.println("Mode setting failed");
+  }
+    
 }
 
 // define the variables to store the PM data.

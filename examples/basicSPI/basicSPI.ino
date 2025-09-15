@@ -5,11 +5,11 @@
  * @n The demo supports FireBeetle-ESP32-E, FireBeetle-ESP32-S3, and FireBeetle-ESP8266.
  * @details Experimental phenomenon: The read data will be output in the serial port monitor.
  * 
- * @copyright Copyright (c) 2010 DFRobot Co.Ltd (http://www.dfrobot.com)
+ * @copyright Copyright (c) 2025 DFRobot Co.Ltd (http://www.dfrobot.com)
  * @license The MIT License (MIT)
- * @author [Ouki](ouki.wang@dfrobot.com)
+ * @author [lbx](liubx8023@gmail.com)
  * @version V1.0
- * @date 2025-07-28
+ * @date 2025-09-15
  * @url https://github.com/DFRobot/DFRobot_BMV080
  */
 
@@ -43,8 +43,11 @@ void setup() {
   sensor.getBmv080ID(id);
   Serial.println("Chip ID is:" + String(id));
   // Set the measurement mode to continuous mode.
-  if(sensor.setBmv080Mode(DFRobot_BMV080_MODE_CONTINUOUS))
+  if(sensor.setBmv080Mode(CONTINUOUS_MODE)){
     Serial.println("Mode setting successful");
+  }else{
+    Serial.println("Mode setting failed");
+  }
     
 }
 

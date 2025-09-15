@@ -70,14 +70,6 @@ The following files can be replaced according to your needs. Just select the cor
 
 ```C++
  /**
-   * @fn begin
-   * @brief Check for the presence of IIC devices.
-   * @return 0 if the device is present.
-   * @return -1 if the device is not present.
-   */
-  int begin(void);
-  
-  /**
    * @fn openBmv080
    * @brief Initialize the BMV080 sensor
    * @pre Must be called first in order to create the _handle_ required by other functions.
@@ -89,7 +81,7 @@ The following files can be replaced according to your needs. Just select the cor
 
   /**
    * @fn closeBmv080
-   * @brief Close the sensor unit.
+   * @brief Turn off the sensor. The sensor will stop functioning. If you need to use it again, you need to call the openBmv080 function.
    * @pre Must be called last in order to destroy the _handle_ created by _bmv080_open_.
    * @return bool: Returns true if successful, otherwise returns false.
    */
@@ -116,7 +108,7 @@ The following files can be replaced according to your needs. Just select the cor
 
   /**
    * @fn getBmv080ID
-   * @brief Get sensor ID.
+   * @brief Get the version information of this sensor driver.
    * @param id: Unique ID
    * @return bool: Returns true if successful, otherwise returns false.
    */
@@ -128,20 +120,21 @@ The following files can be replaced according to your needs. Just select the cor
    * @param PM1: PM1.0 concentration
    * @param PM2_5: PM2.5 concentration
    * @param PM10: PM10 concentration
+   * @param allData: All data from the BMV080 sensor (optional),This is a structure. It has the following members.
+   *                 runtime_in_sec: estimate of the time passed since the start of the measurement, in seconds
+   *                 pm2_5_mass_concentration: PM2.5 value in ug/m3
+   *                 pm1_mass_concentration: PM1 value in ug/m3
+   *                 pm10_mass_concentration: PM10 value in ug/m3
+   *                 pm2_5_number_concentration: PM2.5 value in particles/cm3
+   *                 pm1_number_concentration: PM1 value in particles/cm3
+   *                 pm10_number_concentration: PM10 value in particles/cm3
+   *                 is_obstructed: flag to indicate whether the sensor is obstructed and cannot perform a valid measurement
+   *                 is_outside_measurement_range: flag to indicate whether the PM2.5 concentration is outside the specified measurement range (0..1000 ug/m3)
    * @note This function should be called at least once every 1 second.
    * @return 1 successful, when the BMV080 sensor data is ready.
    * @return 0 unsuccessful, when the BMV080 sensor data is not ready.
    */
-  bool getBmv080Data(float *PM1, float *PM2_5, float *PM10);
-
-  /**
-   * @fn get_bmv080Data
-   * @brief Assign the data of BMV080 to the variable bmv080_output_t.
-   * @param bmv080_output: Output structure containing the BMV080 sensor data
-   * @note This fuction is called in the callback function getBmv080Data_cb.
-   * @return bool: Returns true if successful, otherwise returns false.
-   */
-  bool get_bmv080Data(bmv080_output_t bmv080_output);
+  bool getBmv080Data(float *PM1, float *PM2_5, float *PM10, bmv080_output_t *allData=NULL);
 
   /**
    * @fn setBmv080Mode
@@ -156,7 +149,7 @@ The following files can be replaced according to your needs. Just select the cor
 
   /**
    * @fn stopBmv080
-   * @brief Stop particle measurement.
+   * @brief Stop the measurement. If you need to continue the measurement, you need to call the setBmv080Mode function.
    * @pre Must be called at the end of a data acquisition cycle to ensure that the sensor unit is ready for the next measurement cycle.
    * @return 1 successful
    * @return 0 error 
@@ -165,9 +158,9 @@ The following files can be replaced according to your needs. Just select the cor
 
   /**
    * @fn setIntegrationTime
-   * @brief Measurement window.
+   * @brief Set the measurement window.
    * @note In duty cycling mode, this measurement window is also the sensor ON time.
-   * @param integration_time The measurement integration time in milliseconds (ms).
+   * @param integration_time The measurement integration time in seconds (s).
    * @return 1 successful
    * @return 0 error
    */
@@ -176,7 +169,7 @@ The following files can be replaced according to your needs. Just select the cor
   /**
    * @fn getIntegrationTime
    * @brief Get the current integration time.
-   * @return The current integration time in milliseconds (ms).
+   * @return The current integration time in seconds (s).
    */
   float getIntegrationTime(void);
 
@@ -185,7 +178,7 @@ The following files can be replaced according to your needs. Just select the cor
    * @brief Set the duty cycling period.
    * @n Duty cycling period (sum of integration time and sensor OFF / sleep time).
    * @note This must be greater than integration time by at least 2 seconds.
-   * @param duty_cycling_period The duty cycling period in milliseconds (ms).
+   * @param duty_cycling_period The duty cycling period in seconds (s).
    * @return 1 successful
    * @return 0 error
    */
@@ -194,11 +187,10 @@ The following files can be replaced according to your needs. Just select the cor
   /**
    * @fn getDutyCyclingPeriod
    * @brief Get the current duty cycling period.
-   * @param duty_cycling_period The duty cycling period in milliseconds (ms).
-   * @return 1 successful
+   * @return The current duty cycling period in seconds (s).
    * @return 0 error
    */
-  bool getDutyCyclingPeriod(uint16_t *duty_cycling_period);
+  uint16_t getDutyCyclingPeriod(void);
 
   /**
    * @fn setObstructionDetection
@@ -218,6 +210,14 @@ The following files can be replaced according to your needs. Just select the cor
   bool getObstructionDetection(void);
 
   /**
+   * @fn ifObstructed
+   * @brief Check whether the sensor receiver is blocked.
+   * @return 1 Obstructed
+   * @return 0 not obstructed
+   */
+  bool ifObstructed(void);
+
+    /**
    * @fn setDoVibrationFiltering
    * @brief Enable or disable the Do Vibration Filtering feature.
    * @param do_vibration_filtering 1 to enable, 0 to disable.
@@ -238,9 +238,9 @@ The following files can be replaced according to your needs. Just select the cor
    * @fn setMeasurementAlgorithm
    * @brief Set the measurement algorithm.
    * @param measurement_algorithm The measurement algorithm to use.
-   *                              E_BMV080_MEASUREMENT_ALGORITHM_FAST_RESPONSE
-   *                              E_BMV080_MEASUREMENT_ALGORITHM_BALANCED
-   *                              E_BMV080_MEASUREMENT_ALGORITHM_HIGH_PRECISION
+   *                              FAST_RESPONSE //Fast response,suitable for scenarios requiring quick response
+   *                              BALANCED //Balanced, suitable for scenarios where a balance needs to be struck between precision and rapid response
+   *                              HIGH_PRECISION //High precision, suitable for scenarios requiring high accuracy
    * @return 1 successful
    * @return 0 error
    */
@@ -250,9 +250,9 @@ The following files can be replaced according to your needs. Just select the cor
    * @fn getMeasurementAlgorithm
    * @brief Get the current measurement algorithm.
    * @return The current measurement algorithm.
-   *         E_BMV080_MEASUREMENT_ALGORITHM_FAST_RESPONSE
-   *         E_BMV080_MEASUREMENT_ALGORITHM_BALANCED
-   *         E_BMV080_MEASUREMENT_ALGORITHM_HIGH_PRECISION
+   *         FAST_RESPONSE //Fast response,suitable for scenarios requiring quick response
+   *         BALANCED //Balanced, suitable for scenarios where a balance needs to be struck between precision and rapid response
+   *         HIGH_PRECISION //High precision, suitable for scenarios requiring high accuracy
    */
   uint8_t getMeasurementAlgorithm(void);
 ```

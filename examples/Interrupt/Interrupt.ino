@@ -51,7 +51,7 @@ void setup() {
   sensor.getBmv080ID(id);
   Serial.println("Chip ID is:" + String(id));
   // Set the measurement mode to continuous mode.
-  if(sensor.setBmv080Mode(DFRobot_BMV080_MODE_CONTINUOUS))
+  if(sensor.setBmv080Mode(CONTINUOUS_MODE))
     Serial.println("Mode setting successful");
   // Set the interrupt pin.
   setInterruptPin();

@@ -71,9 +71,9 @@ BMV080 目前是世界上最小的 PM2.5 芯片，它采用激光进行测量。
 ```C++
  /**
    * @fn begin
-   * @brief 检查是否有 IIC 设备存在
-   * @return 0 存在
-   * @return -1 不存在
+   * @brief 检测是否传感器已连接
+   * @return 0 已连接
+   * @return -1 未连接
    */
   int begin(void);
   
@@ -89,7 +89,7 @@ BMV080 目前是世界上最小的 PM2.5 芯片，它采用激光进行测量。
 
   /**
    * @fn closeBmv080
-   * @brief 关闭BMV080传感器
+   * @brief 关闭传感器。此时传感器将停止工作。如果您需要再次使用它，需要调用 openBmv080 函数。
    * @pre 必须最后调用此函数，以便销毁由 _bmv080_open_ 函数创建的 _句柄_ 
    * @return 1 成功
    * @return 0 失败
@@ -132,11 +132,21 @@ BMV080 目前是世界上最小的 PM2.5 芯片，它采用激光进行测量。
    * @param PM1: PM1.0 数据
    * @param PM2_5: PM2.5 数据
    * @param PM10: PM10 数据
+   * @param allData: 所有数据,这是一个结构体，包含所有数据，包含一下成员
+   *                 float runtime_in_sec：运行时间
+   *                 float pm2_5_mass_concentration: PM2.5 浓度(ug/m3)
+   *                 float pm1_mass_concentration: PM1.0 浓度(ug/m3)
+   *                 float pm10_mass_concentration: PM10 浓度(ug/m3)
+   *                 float pm2_5_number_concentration: PM2.5 浓度(particles/m3)
+   *                 float pm1_number_concentration: PM1.0 浓度(particles/m3)
+   *                 float pm10_number_concentration: PM10 浓度(particles/m3)
+   *                 bool is_obstructed: 判断传感器是否被遮挡，从而判断数据是否有效。1 表示传感器被遮挡，0 表示传感器未被遮挡
+   *                 bool is_outside_measurement_range：判断传感器是否在测量范围外(0..1000 ug/m3)1 表示传感器在范围外，0 表示传感器在范围内
    * @note 此功能每秒至少应被调用一次。
    * @return 1 成功, BMV080 传感器数据有效
    * @return 0 失败, BMV080 传感器数据无效
    */
-  bool getBmv080Data(float *PM1, float *PM2_5, float *PM10);
+  bool getBmv080Data(float *PM1, float *PM2_5, float *PM10, bmv080_output_t *allData=NULL);
 
   /**
    * @fn get_bmv080Data
@@ -151,9 +161,9 @@ BMV080 目前是世界上最小的 PM2.5 芯片，它采用激光进行测量。
   /**
    * @fn setBmv080Mode
    * @brief 设置 BMV080 传感器的模式
-   * @param mode: 设置的模式可为：DFRobot_BMV080_MODE_CONTINUOUS 或 DFRobot_BMV080_MODE_DUTY_CYCLE
-   *              DFRobot_BMV080_MODE_CONTINUOUS: 传感器持续进行测量
-   *              DFRobot_BMV080_MODE_DUTY_CYCLE: 传感器会按照指定的时间间隔进行测量
+   * @param mode: 设置的模式可为：CONTINUOUS_MODE 或 DUTY_CYCLE_MODE
+   *              CONTINUOUS_MODE: 传感器持续进行测量
+   *              DUTY_CYCLE_MODE: 传感器会按照指定的时间间隔进行测量
    * @return 1 成功
    * @return 0 失败
    */
@@ -161,7 +171,7 @@ BMV080 目前是世界上最小的 PM2.5 芯片，它采用激光进行测量。
 
   /**
    * @fn stopBmv080
-   * @brief 停止颗粒物测量。
+   * @brief 停止测量。如果需要继续进行测量，则需要调用 setBmv080Mode 函数。
    * @pre 必须在数据采集周期结束时调用以确保传感器单元准备好下一个测量周期。
    * @return 1 成功
    * @return 0 错误 
@@ -170,7 +180,7 @@ BMV080 目前是世界上最小的 PM2.5 芯片，它采用激光进行测量。
 
   /**
    * @fn setIntegrationTime
-   * @brief 测量窗口时间。
+   * @brief 设置测量窗口时间。
    * @note 在占空循环模式下，该测量窗口也是传感器开启时间。
    * @param integration_time 测量积分时间，单位为毫秒（ms）。
    * @return 1 成功
@@ -243,9 +253,9 @@ BMV080 目前是世界上最小的 PM2.5 芯片，它采用激光进行测量。
    * @fn setMeasurementAlgorithm
    * @brief 设置测量算法。
    * @param measurement_algorithm 使用的测量算法。
-   *                              E_BMV080_MEASUREMENT_ALGORITHM_FAST_RESPONSE
-   *                              E_BMV080_MEASUREMENT_ALGORITHM_BALANCED
-   *                              E_BMV080_MEASUREMENT_ALGORITHM_HIGH_PRECISION
+   *                              FAST_RESPONSE：响应迅速模式，适用于需要快速响应的场景
+   *                              BALANCED：平衡模式，适用于需要在精度与快速响应之间取得平衡的场景
+   *                              HIGH_PRECISION：高精度模式，适用于对精度有高要求的场景
    * @return 1 成功
    * @return 0 错误
    */
@@ -255,9 +265,9 @@ BMV080 目前是世界上最小的 PM2.5 芯片，它采用激光进行测量。
    * @fn getMeasurementAlgorithm
    * @brief 获取当前使用的测量算法。
    * @return 当前使用的测量算法。
-   *         E_BMV080_MEASUREMENT_ALGORITHM_FAST_RESPONSE
-   *         E_BMV080_MEASUREMENT_ALGORITHM_BALANCED
-   *         E_BMV080_MEASUREMENT_ALGORITHM_HIGH_PRECISION
+   *         FAST_RESPONSE：响应迅速模式，适用于需要快速响应的场景
+   *         BALANCED：平衡模式，适用于需要在精度与快速响应之间取得平衡的场景
+   *         HIGH_PRECISION：高精度模式，适用于对精度有高要求的场景
    */
   uint8_t getMeasurementAlgorithm(void);
 ```

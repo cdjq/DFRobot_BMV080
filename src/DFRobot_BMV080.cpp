@@ -1,9 +1,5 @@
 #include "DFRobot_BMV080.h"
 
-DFRobot_BMV080::DFRobot_BMV080(void) {
-  // Constructor implementation 
-}
-
 int8_t DFRobot_BMV080::BMV080_write_16bit_cb(bmv080_sercom_handle_t sercom_handle, uint16_t header, const uint16_t* payload, uint16_t payload_length)
 {
   DFRobot_BMV080 *_pDev = (DFRobot_BMV080 *)sercom_handle;
@@ -103,7 +99,7 @@ bool DFRobot_BMV080::get_bmv080Data(bmv080_output_t bmv080_output)
   return E_BMV080_OK;
 }
 
-bool DFRobot_BMV080::getBmv080Data(float *PM1, float *PM2_5, float *PM10)
+bool DFRobot_BMV080::getBmv080Data(float *PM1, float *PM2_5, float *PM10, bmv080_output_t *allData)
 {
   _bmv080DataOK = false;
 
@@ -121,6 +117,9 @@ bool DFRobot_BMV080::getBmv080Data(float *PM1, float *PM2_5, float *PM10)
     *PM1 = _bmv080Data.pm1_mass_concentration;
     *PM2_5 = _bmv080Data.pm2_5_mass_concentration;
     *PM10 = _bmv080Data.pm10_mass_concentration;
+    if (allData != nullptr) {
+      *allData = _bmv080Data;
+    }
   }
 
   return _bmv080DataOK;
@@ -130,9 +129,9 @@ bool DFRobot_BMV080::setBmv080Mode(uint8_t mode)
 {
   bmv080_status_code_t bmv080_status = E_BMV080_ERROR_PARAM_INVALID_VALUE;
 
-  if(mode == DFRobot_BMV080_MODE_CONTINUOUS) {
+  if(mode == CONTINUOUS_MODE) {
     bmv080_status = bmv080_start_continuous_measurement(_bmv080_handle_class);
-  }else if(mode == DFRobot_BMV080_MODE_DUTY_CYCLE) {
+  }else if(mode == DUTY_CYCLE_MODE) {
     bmv080_duty_cycling_mode_t bmv080_duty_cycling_mode = E_BMV080_DUTY_CYCLING_MODE_0;
     bmv080_status = bmv080_start_duty_cycling_measurement(_bmv080_handle_class, (bmv080_callback_tick_t)BMV080_delay_cycling_cb, bmv080_duty_cycling_mode);
   } else {
