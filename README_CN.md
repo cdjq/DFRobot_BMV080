@@ -90,7 +90,7 @@ BMV080 目前是世界上最小的 PM2.5 芯片，它采用激光进行测量。
   /**
    * @fn closeBmv080
    * @brief 关闭传感器。此时传感器将停止工作。如果您需要再次使用它，需要调用 openBmv080 函数。
-   * @pre 必须最后调用此函数，以便销毁由 _bmv080_open_ 函数创建的 _句柄_ 
+   * @pre 必须最后调用此函数，以便销毁由“bmv080_open"函数创建的"句柄"
    * @return 1 成功
    * @return 0 失败
    */
@@ -100,7 +100,7 @@ BMV080 目前是世界上最小的 PM2.5 芯片，它采用激光进行测量。
    * @fn resetBmv080
    * @brief 重置一个传感器单元，该单元包括硬件和软件部分
    * @pre 必须使用由“bmv080_open”函数生成的有效“句柄”
-   * @post 通过 _bmv080_set_parameter_ 更改的任何参数都会恢复到其默认值
+   * @post 通过“bmv080_set_parameter”更改的任何参数都会恢复到其默认值
    * @return 1 成功
    * @return 0 失败
    */
@@ -149,16 +149,6 @@ BMV080 目前是世界上最小的 PM2.5 芯片，它采用激光进行测量。
   bool getBmv080Data(float *PM1, float *PM2_5, float *PM10, bmv080_output_t *allData=NULL);
 
   /**
-   * @fn get_bmv080Data
-   * @brief 将 BMV080 的数据赋值给变量 bmv080_output_t
-   * @param bmv080_output: BMV080传感器数据的输出结构体
-   * @note 此功能是在回调函数“getBmv080Data_cb”中被调用的
-   * @return 1 成功
-   * @return 0 失败
-   */
-  bool get_bmv080Data(bmv080_output_t bmv080_output);
-
-  /**
    * @fn setBmv080Mode
    * @brief 设置 BMV080 传感器的模式
    * @param mode: 设置的模式可为：CONTINUOUS_MODE 或 DUTY_CYCLE_MODE
@@ -171,7 +161,7 @@ BMV080 目前是世界上最小的 PM2.5 芯片，它采用激光进行测量。
 
   /**
    * @fn stopBmv080
-   * @brief 停止测量。如果需要继续进行测量，则需要调用 setBmv080Mode 函数。
+   * @brief 停止测量。如果需要继续进行测量，则需要调用“setBmv080Mode”函数。
    * @pre 必须在数据采集周期结束时调用以确保传感器单元准备好下一个测量周期。
    * @return 1 成功
    * @return 0 错误 

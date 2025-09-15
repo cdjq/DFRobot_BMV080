@@ -20,9 +20,9 @@
 SET_LOOP_TASK_STACK_SIZE(60 * 1024); // Set the stack size of the loop task to 60KB
 
 //You can choose to use either the IIC interface or the SPI interface. The default is IIC. 
-//If you want to use SPI, simply remove the following comments.
 DFRobot_BMV080_I2C sensor(&Wire, 0x57); // Create an instance of the DFRobot_BMV080_I2C class with the I2C address 0x57.
 
+/* If you want to use SPI, simply remove the following comments, and change the SPI_CS_PIN to the corresponding SPI CS pin.*/
 //#define SPI_CS_PIN 17
 //DFRobot_BMV080_SPI sensor(&SPI,SPI_CS_PIN); // Create an instance of the DFRobot_BMV080_SPI class with the SPI CS pin.
 
@@ -70,7 +70,6 @@ void loop() {
       if(sensor.ifObstructed()){
         Serial.print("  Obstructed The data may be invalid.");
       }
-
       Serial.println();
     }
   }
