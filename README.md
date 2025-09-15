@@ -70,6 +70,13 @@ The following files can be replaced according to your needs. Just select the cor
 
 ```C++
  /**
+   * @fn begin
+   * @brief Check if the sensor is connected.
+   * @return 0 if the sensor is connected.
+   * @return 1 if the sensor is not connected.
+   */
+  int begin(void);
+ /**
    * @fn openBmv080
    * @brief Initialize the BMV080 sensor
    * @pre Must be called first in order to create the _handle_ required by other functions.
