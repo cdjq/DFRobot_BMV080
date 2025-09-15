@@ -266,7 +266,7 @@ Mega2560           |              |       √      |             |
 Leonardo           |              |       √      |             | 
 ESP32              |      √       |              |             | 
 micro:bit          |              |       √      |             | 
-raspberry pi       |      √       |              |             |     
+raspberry pi       |              |       √      |             |     
 <br>
 
 ## History
