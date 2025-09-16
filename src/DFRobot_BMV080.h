@@ -22,7 +22,7 @@
 #include <SPI.h>
 
 //Open this macro to see the detailed running process of the program
-// #define ENABLE_DBG
+//#define ENABLE_DBG
 #ifdef ENABLE_DBG
 #define DBG(...) {Serial.print("[");Serial.print(__FUNCTION__); Serial.print("(): "); Serial.print(__LINE__); Serial.print(" ] "); Serial.println(__VA_ARGS__);}
 #else
@@ -55,10 +55,13 @@ public:
    * @brief Initialize the BMV080 sensor
    * @pre Must be called first in order to create the _handle_ required by other functions.
    * @post The _handle_ must be destroyed via _bmv080_close_.
+   * @note This function usually only needs to be called once.
    * @note It must be called before any other functions that interact with the sensor.
-   * @return int: Returns ERR_OK if successful, otherwise returns an error code.
+   * @return 0 successful.
+   * @return -1 error, The function bar has an error in the order.The function closeBmv080 has been called multiple times or has not been called at all.
+   * @return other values. See the bmv080_status_code_t enumeration in bmv080_defs.h for details.
    */
-  uint8_t openBmv080(void);
+  int openBmv080(void);
 
   /**
    * @fn closeBmv080

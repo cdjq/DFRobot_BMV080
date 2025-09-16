@@ -39,13 +39,16 @@ void DFRobot_BMV080::getBmv080Data_cb(bmv080_output_t bmv080_output, void *cb_pa
   ((DFRobot_BMV080 *)cb_parameters)->get_bmv080Data(bmv080_output);
 }
 
-uint8_t DFRobot_BMV080::openBmv080(void)
+int DFRobot_BMV080::openBmv080(void)
 {
   bmv080_status_code_t bmv080_status = bmv080_open(
         &_bmv080_handle_class, (bmv080_sercom_handle_t)this, (bmv080_callback_read_t)BMV080_read_16bit_cb,
         (bmv080_callback_write_t)BMV080_write_16bit_cb, (bmv080_callback_delay_t)BMV080_delay_cb);
   //DBG("status is:" + String(bmv080_status));
-
+  if(bmv080_status == E_BMV080_ERROR_PRECONDITION_UNSATISFIED) {
+    DBG("bmv080_open failed, status is:" + String(bmv080_status));
+    return -1;
+  }
   return bmv080_status;
 }
 
