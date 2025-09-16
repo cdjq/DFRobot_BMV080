@@ -6,8 +6,8 @@
 传统的 PM2.5 传感器通常依靠风扇或风道将自由漂浮的颗粒引入检测区域，因此体积较大，并伴有风扇噪音和灰尘堆积问题，这增加了维护成本和故障风险。然而，这款传感器采用类似于相机的测量原理，运用激光光学技术，根据自由空间中颗粒的数量和相对速度来计算质量浓度。它巧妙地利用周围自然气流驱动颗粒进入检测区域进行直接测量，无需风扇或强制气流系统，从而消除了维护麻烦，避免了风扇造成的灰尘堆积，显著提高了设备的可靠性。<br>
 ![Fermion_BMV080](image/Fermion_BMV080.JPG)
 
-## 产品链接
-    SKU:XXXXX
+## 产品链接（[https://www.dfrobot.com.cn](https://www.dfrobot.com.cn)）
+    SKU:SEN0663
 
 ## 目录
 
@@ -92,7 +92,7 @@ BMV080 目前是世界上最小的 PM2.5 芯片，它采用激光进行测量。
    * @brief 关闭传感器。此时传感器将停止工作。如果您需要再次使用它，需要调用 openBmv080 函数。
    * @pre 必须最后调用此函数，以便销毁由“bmv080_open"函数创建的"句柄"
    * @return 1 成功
-   * @return 0 失败
+   * @return 0 失败,句柄为空，或者在这之前没有调用“openBmv080 stopBmv080”函数
    */
   bool closeBmv080(void);
 
@@ -102,7 +102,7 @@ BMV080 目前是世界上最小的 PM2.5 芯片，它采用激光进行测量。
    * @pre 必须使用由“bmv080_open”函数生成的有效“句柄”
    * @post 通过“bmv080_set_parameter”更改的任何参数都会恢复到其默认值
    * @return 1 成功
-   * @return 0 失败
+   * @return 0 失败,在这之前没有调用“openBmv080 stopBmv080”函数
    */
   bool resetBmv080(void);
 
@@ -156,8 +156,9 @@ BMV080 目前是世界上最小的 PM2.5 芯片，它采用激光进行测量。
    *              DUTY_CYCLE_MODE: 传感器会按照指定的时间间隔进行测量
    * @return 1 成功
    * @return 0 失败
+   * @return -1 参数错误,或者在这之前没有调用“openBmv080 或者 stopBmv080”函数。
    */
-  bool setBmv080Mode(uint8_t mode);
+  int setBmv080Mode(uint8_t mode);
 
   /**
    * @fn stopBmv080
@@ -175,13 +176,17 @@ BMV080 目前是世界上最小的 PM2.5 芯片，它采用激光进行测量。
    * @param integration_time 测量积分时间，单位为毫秒（ms）。
    * @return 1 成功
    * @return 0 错误
+   * @return -1 integration_time不在有效范围内，必须大于等于1s
+   * @return -2 integration_time 必须小于 duty_cycling_period 至少2s
+   * @return -3 在这之前没有调用“openBmv080 或者 stopBmv080”函数。
    */
-  bool setIntegrationTime(float integration_time);
+  int setIntegrationTime(float integration_time);
 
   /**
    * @fn getIntegrationTime
    * @brief 获取当前积分时间。
    * @return 当前积分时间，单位为毫秒（ms）。
+   * @return 0 错误，在这之前没有调用“openBmv080 或者 stopBmv080”函数。
    */
   float getIntegrationTime(void);
 
@@ -193,15 +198,18 @@ BMV080 目前是世界上最小的 PM2.5 芯片，它采用激光进行测量。
    * @param duty_cycling_period 占空循环周期，单位为毫秒（ms）。
    * @return 1 成功
    * @return 0 错误
+   * @return -1 duty_cycling_period 不在有效范围内，必须大于等于12s
+   * @return -2 duty_cycling_period 必须大于 integration_time 至少2s.
+   * @return -3 传感器还在持续运行种，在这之前没有调用“openBmv080 或者 stopBmv080”函数。
    */
-  bool setDutyCyclingPeriod(uint16_t duty_cycling_period);
+  int setDutyCyclingPeriod(uint16_t duty_cycling_period);
 
   /**
    * @fn getDutyCyclingPeriod
    * @brief 获取当前占空循环周期。
    * @param duty_cycling_period 当前占空循环周期，单位为毫秒（ms）。
    * @return 1 成功
-   * @return 0 错误
+   * @return 0 错误，在这之前没有调用“openBmv080 或者 stopBmv080”函数。
    */
   bool getDutyCyclingPeriod(uint16_t *duty_cycling_period);
 
@@ -210,7 +218,7 @@ BMV080 目前是世界上最小的 PM2.5 芯片，它采用激光进行测量。
    * @brief 设置是否启用阻塞检测功能。
    * @param obstructed 1 启用阻塞检测，0 禁用。
    * @return 1 成功
-   * @return 0 错误
+   * @return 0 错误，在这之前没有调用“openBmv080 或者 stopBmv080”函数。
    */
   bool setObstructionDetection(bool obstructed);
 
@@ -219,15 +227,16 @@ BMV080 目前是世界上最小的 PM2.5 芯片，它采用激光进行测量。
    * @brief 获取阻塞检测功能是否启用状态。
    * @return 1 阻塞检测启用。
    * @return 0 阻塞检测禁用。
+   * @return -1 获取失败，在这之前没有调用“openBmv080 或者 stopBmv080”函数。
    */
-  bool getObstructionDetection(void);
+  int getObstructionDetection(void);
 
   /**
    * @fn setDoVibrationFiltering
    * @brief 启用或禁用振动过滤功能。
    * @param do_vibration_filtering 1 启用，0 禁用。
    * @return 1 成功
-   * @return 0 错误
+   * @return 0 错误，在这之前没有调用“openBmv080 或者 stopBmv080”函数。
    */
   bool setDoVibrationFiltering(bool do_vibration_filtering);
 
@@ -236,8 +245,9 @@ BMV080 目前是世界上最小的 PM2.5 芯片，它采用激光进行测量。
    * @brief 获取振动过滤功能的状态。
    * @return 1 振动过滤启用。
    * @return 0 振动过滤禁用。
+   * @return -1 获取失败，在这之前没有调用“openBmv080 或者 stopBmv080”函数。
    */
-  bool getDoVibrationFiltering(void);
+  int getDoVibrationFiltering(void);
 
   /**
    * @fn setMeasurementAlgorithm
@@ -248,8 +258,10 @@ BMV080 目前是世界上最小的 PM2.5 芯片，它采用激光进行测量。
    *                              HIGH_PRECISION：高精度模式，适用于对精度有高要求的场景
    * @return 1 成功
    * @return 0 错误
+   * @return -1 measurement_algorithm 不在有效范围内
+   * @return -2 传感器还在持续运行种，在这之前没有调用“openBmv080 或者 stopBmv080”函数。
    */
-  bool setMeasurementAlgorithm(uint8_t measurement_algorithm);
+  int setMeasurementAlgorithm(uint8_t measurement_algorithm);
 
   /**
    * @fn getMeasurementAlgorithm
@@ -258,8 +270,17 @@ BMV080 目前是世界上最小的 PM2.5 芯片，它采用激光进行测量。
    *         FAST_RESPONSE：响应迅速模式，适用于需要快速响应的场景
    *         BALANCED：平衡模式，适用于需要在精度与快速响应之间取得平衡的场景
    *         HIGH_PRECISION：高精度模式，适用于对精度有高要求的场景
+   * @return 0 获取失败，在这之前没有调用“openBmv080 或者 stopBmv080”函数。
    */
   uint8_t getMeasurementAlgorithm(void);
+
+  /**
+   * @fn ifObstructed
+   * @brief 检测传感器是否被遮挡。
+   * @return 1 被遮挡。
+   * @return 0 未被遮挡。
+   */
+  bool ifObstructed(void);
 ```
 
 ## Compatibility

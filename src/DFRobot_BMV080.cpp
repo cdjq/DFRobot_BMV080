@@ -52,7 +52,10 @@ uint8_t DFRobot_BMV080::openBmv080(void)
 bool DFRobot_BMV080::closeBmv080(void)
 {
   bmv080_status_code_t bmv080_status = bmv080_close(&_bmv080_handle_class);
-
+  if(bmv080_status != E_BMV080_OK) {
+      DBG("bmv080_close failed, status is:" + String(bmv080_status));
+      return false;
+  }
   return bmv080_status == E_BMV080_OK;  
 }
 
@@ -65,7 +68,7 @@ bool DFRobot_BMV080::stopBmv080(void)
 
 bool DFRobot_BMV080::resetBmv080(void)
 {
-  bmv080_status_code_t bmv080_status = bmv080_reset(&_bmv080_handle_class);
+  bmv080_status_code_t bmv080_status = bmv080_reset(_bmv080_handle_class);
 
   if(bmv080_status != E_BMV080_OK) {
     DBG("bmv080_reset failed, status is:" + String(bmv080_status));
@@ -125,7 +128,7 @@ bool DFRobot_BMV080::getBmv080Data(float *PM1, float *PM2_5, float *PM10, bmv080
   return _bmv080DataOK;
 }
 
-bool DFRobot_BMV080::setBmv080Mode(uint8_t mode)
+int DFRobot_BMV080::setBmv080Mode(uint8_t mode)
 {
   bmv080_status_code_t bmv080_status = E_BMV080_ERROR_PARAM_INVALID_VALUE;
 
@@ -136,17 +139,29 @@ bool DFRobot_BMV080::setBmv080Mode(uint8_t mode)
     bmv080_status = bmv080_start_duty_cycling_measurement(_bmv080_handle_class, (bmv080_callback_tick_t)BMV080_delay_cycling_cb, bmv080_duty_cycling_mode);
   } else {
     DBG("setBmv080Mode failed, mode is invalid");
-    return false;
+    return -1;
   }
 
   return (bmv080_status == E_BMV080_OK);
 }
 
-bool DFRobot_BMV080::setIntegrationTime(float integration_time)
+int DFRobot_BMV080::setIntegrationTime(float integration_time)
 {
-  bmv080_status_code_t bmv080_status = bmv080_set_parameter(_bmv080_handle_class, "integration_time", (void *)&integration_time);
+  int duty_cycling_period = getDutyCyclingPeriod();
+  if(integration_time < 1.0f){
+    DBG("setIntegrationTime failed, integration_time is invalid");
+    return -1;
+  }else if(duty_cycling_period - integration_time < 2){
+    DBG("integration_time must less than duty_cycling_period by at least 2 seconds");
+    return -2;
+  }
 
+  bmv080_status_code_t bmv080_status = bmv080_set_parameter(_bmv080_handle_class, "integration_time", (void *)&integration_time);
   if(bmv080_status != E_BMV080_OK) {
+    if(bmv080_status == E_BMV080_ERROR_PRECONDITION_UNSATISFIED) {
+      DBG("setIntegrationTime failed, precondition is unsatisfied");
+      return -3;
+    }
     DBG("setIntegrationTime failed, status is:" + String(bmv080_status));
     return false;
   }
@@ -161,18 +176,33 @@ float DFRobot_BMV080::getIntegrationTime(void)
   bmv080_status_code_t bmv080_status = bmv080_get_parameter(_bmv080_handle_class, "integration_time", (void *)&integration_time);
 
   if(bmv080_status != E_BMV080_OK) {
-    //DBG("setIntegrationTime failed, status is:" + String(bmv080_status));
+    DBG("setIntegrationTime failed, status is:" + String(bmv080_status));
     return false;
   }
 
   return integration_time;
 }
 
-bool DFRobot_BMV080::setDutyCyclingPeriod(uint16_t duty_cycling_period)
+int DFRobot_BMV080::setDutyCyclingPeriod(uint16_t duty_cycling_period)
 {
+  float integration_time = getIntegrationTime();
+  if(duty_cycling_period < 12){
+    DBG("setDutyCyclingPeriod failed, duty_cycling_period is invalid");
+    return -1;
+  }else if(integration_time > duty_cycling_period - 2){
+    DBG("duty_cycling_period must be greater than integration_time by at least 2 seconds");
+    return -2;
+  }
   bmv080_status_code_t bmv080_status =
       bmv080_set_parameter(_bmv080_handle_class, "duty_cycling_period", (void *)&duty_cycling_period);
-
+  if(bmv080_status != E_BMV080_OK) {
+    if(bmv080_status == E_BMV080_ERROR_PRECONDITION_UNSATISFIED) {
+      DBG("setDutyCyclingPeriod failed, precondition is unsatisfied");
+      return -3;
+    }
+    DBG("setDutyCyclingPeriod failed, status is:" + String(bmv080_status));
+    return false;
+  }
   return (bmv080_status == E_BMV080_OK);
 }
 
@@ -191,12 +221,12 @@ bool DFRobot_BMV080::setObstructionDetection(bool obstructed)
   return (bmv080_status == E_BMV080_OK ? obstructed : false);
 }
 
-bool DFRobot_BMV080::getObstructionDetection(void)
+int DFRobot_BMV080::getObstructionDetection(void)
 {
   bool obstructed = false;
   bmv080_status_code_t bmv080_status = bmv080_get_parameter(_bmv080_handle_class, "do_obstruction_detection", (void *)&obstructed);
 
-  return (bmv080_status == E_BMV080_OK ? obstructed : false);
+  return (bmv080_status == E_BMV080_OK ? obstructed : -1);
 }
 
 bool DFRobot_BMV080::ifObstructed(void)
@@ -211,19 +241,30 @@ bool DFRobot_BMV080::setDoVibrationFiltering(bool do_vibration_filtering)
   return (bmv080_status == E_BMV080_OK);
 }
 
-bool DFRobot_BMV080::getDoVibrationFiltering(void)
+int DFRobot_BMV080::getDoVibrationFiltering(void)
 {
   bool do_vibration_filtering = false;
   bmv080_status_code_t bmv080_status = bmv080_get_parameter(_bmv080_handle_class, "do_vibration_filtering", (void *)&do_vibration_filtering);
 
-  return (bmv080_status == E_BMV080_OK ? do_vibration_filtering : false);
+  return (bmv080_status == E_BMV080_OK ? do_vibration_filtering : -1);
 }
 
-bool DFRobot_BMV080::setMeasurementAlgorithm(uint8_t measurement_algorithm)
+int DFRobot_BMV080::setMeasurementAlgorithm(uint8_t measurement_algorithm)
 {
+  if(measurement_algorithm > 3){
+    DBG("setMeasurementAlgorithm failed, measurement_algorithm is invalid");
+    return -1;
+  }
   bmv080_measurement_algorithm_t bmv080_measurement_algorithm = (bmv080_measurement_algorithm_t)measurement_algorithm;
   bmv080_status_code_t bmv080_status = bmv080_set_parameter(_bmv080_handle_class, "measurement_algorithm", (void *)&bmv080_measurement_algorithm);
-
+  if(bmv080_status != E_BMV080_OK) {
+    if(bmv080_status == E_BMV080_ERROR_PRECONDITION_UNSATISFIED) {
+      DBG("setMeasurementAlgorithm failed, precondition is unsatisfied");
+      return -3;
+    }
+    DBG("setMeasurementAlgorithm failed, status is:" + String(bmv080_status));
+    return false;
+  }
   return (bmv080_status == E_BMV080_OK);
 }
 uint8_t DFRobot_BMV080::getMeasurementAlgorithm(void)
