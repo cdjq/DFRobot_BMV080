@@ -66,7 +66,7 @@ BMV080 目前是世界上最小的 PM2.5 芯片，它采用激光进行测量。
 |api/lib/xtensa_esp32s3/xtensa_esp32s3_elf_gcc/release/lib_postProcessor.a | src/esp32s3/lib_postProcessor.a|
 |api/lib/xtensa_esp32s3/xtensa_esp32s3_elf_gcc/release/lib_bmv080.a | src/esp32s3/lib_bmv080.a|
 
-## Methods
+## 方法
 
 ```C++
  /**
@@ -283,7 +283,7 @@ BMV080 目前是世界上最小的 PM2.5 芯片，它采用激光进行测量。
   bool ifObstructed(void);
 ```
 
-## Compatibility
+## 兼容性
 
 MCU                | Work Well    | Work Wrong   | Untested    | Remarks
 ------------------ | :----------: | :----------: | :---------: | -----
@@ -295,10 +295,10 @@ micro:bit          |              |       √      |             |
 raspberry pi       |              |       √      |             |     
 <br>
 
-## History
+## 历史
 
-- 2025/07/08 - Version 1.0.0  版本
+- 2025/09/15 - Version 1.0.0  版本
 
-## Credits
+## 创作者
 
 Written by Alexander(ouki.wang@dfrobot.com), 2025. (Welcome to our [website](https://www.dfrobot.com/))
