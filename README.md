@@ -81,10 +81,12 @@ The following files can be replaced according to your needs. Just select the cor
    * @brief Initialize the BMV080 sensor
    * @pre Must be called first in order to create the _handle_ required by other functions.
    * @post The _handle_ must be destroyed via _bmv080_close_.
+   * @note This function usually only needs to be called once.
    * @note It must be called before any other functions that interact with the sensor.
-   * @return int: Returns ERR_OK if successful, otherwise returns an error code.
+   * @return 0 successful.
+   * @return other values. See the bmv080_status_code_t enumeration in bmv080_defs.h for details.
    */
-  uint8_t openBmv080(void);
+  uint16_t openBmv080(void);
 
   /**
    * @fn closeBmv080
@@ -149,13 +151,14 @@ The following files can be replaced according to your needs. Just select the cor
 
   /**
    * @fn setBmv080Mode
-   * @brief Set the BMV080 sensor's mode.
+   * @brief Set the BMV080 sensor's mode.After calling this function, the sensor will start to collect data.
    * @param mode: The mode to set, either CONTINUOUS_MODE or DUTY_CYCLE_MODE
    *              CONTINUOUS_MODE: Sensor takes measurements continuously
    *              DUTY_CYCLE_MODE: Sensor takes measurements at specified intervals
-   * @return 1 successful
-   * @return 0 error
-   * @return -1 mode is invalid, or not call openBmv080 or stopBmv080 function before.
+   * @return 0 successful
+   * @return -1 mode is invalid
+   * @return -2 precondition is unsatisfied (for example, if the sensor is currently running in continuous mode, you should stop the measurement first).
+   * @return other error, see the bmv080_status_code_t enumeration in bmv080_defs.h for details.
    */
   int setBmv080Mode(uint8_t mode);
 
@@ -173,11 +176,11 @@ The following files can be replaced according to your needs. Just select the cor
    * @brief Set the measurement window.
    * @note In duty cycling mode, this measurement window is also the sensor ON time.
    * @param integration_time The measurement integration time in seconds (s).
-   * @return 1 successful
-   * @return 0 error
+   * @return 0 successful
    * @return -1 integration_time is invalid, must be greater than or equal to 1.0s
-   * @return -2 integration_time must less than duty_cycling_period by at least 2 seconds.
+   * @return -2 duty_cycling_period must larger than integration_time by at least 2 seconds.
    * @return -3 precondition is unsatisfied (for example, if the sensor is currently running in continuous mode, you should stop the measurement first).
+   * @return other error, see the bmv080_status_code_t enumeration in bmv080_defs.h for details.
    */
   int setIntegrationTime(float integration_time);
 
@@ -185,7 +188,7 @@ The following files can be replaced according to your needs. Just select the cor
    * @fn getIntegrationTime
    * @brief Get the current integration time.
    * @return The current integration time in seconds (s).
-   * @return 0 error, or not call openBmv080 or stopBmv080 function before.
+   * @return NAN error, or not call openBmv080 or stopBmv080 function before.
    */
   float getIntegrationTime(void);
 
@@ -195,11 +198,11 @@ The following files can be replaced according to your needs. Just select the cor
    * @n Duty cycling period (sum of integration time and sensor OFF / sleep time).
    * @note This must be greater than integration time by at least 2 seconds.
    * @param duty_cycling_period The duty cycling period in seconds (s).
-   * @return 1 successful
-   * @return 0 error
+   * @return 0 successful
    * @return -1 duty_cycling_period is invalid, must be greater than or equal to 12s
-   * @return -2 duty_cycling_period must greater than integration_time by at least 2 seconds.
+   * @return -2 integration_time must less than duty_cycling_period by at least 2 seconds.
    * @return -3 precondition is unsatisfied (for example, if the sensor is currently running in continuous mode, you should stop the measurement first).
+   * @return other error, see the bmv080_status_code_t enumeration in bmv080_defs.h for details.
    */
   int setDutyCyclingPeriod(uint16_t duty_cycling_period);
 
@@ -207,7 +210,7 @@ The following files can be replaced according to your needs. Just select the cor
    * @fn getDutyCyclingPeriod
    * @brief Get the current duty cycling period.
    * @return The current duty cycling period in seconds (s).
-   * @return 0 error, or not call openBmv080 or stopBmv080 function before.
+   * @return 0 error
    */
   uint16_t getDutyCyclingPeriod(void);
 
@@ -262,10 +265,10 @@ The following files can be replaced according to your needs. Just select the cor
    *                              FAST_RESPONSE //Fast response,suitable for scenarios requiring quick response
    *                              BALANCED //Balanced, suitable for scenarios where a balance needs to be struck between precision and rapid response
    *                              HIGH_PRECISION //High precision, suitable for scenarios requiring high accuracy
-   * @return 1 successful
-   * @return 0 error
+   * @return 0 successful
    * @return -1 measurement_algorithm is invalid
    * @return -3 precondition is unsatisfied (for example, if the sensor is currently running in continuous mode, you should stop the measurement first).
+   * @return other error, see the bmv080_status_code_t enumeration in bmv080_defs.h for details.
    */
   int setMeasurementAlgorithm(uint8_t measurement_algorithm);
 
@@ -299,4 +302,4 @@ raspberry pi       |              |       √      |             |
 
 ## Credits
 
-Written by Alexander(ouki.wang@dfrobot.com), 2025. (Welcome to our [website](https://www.dfrobot.com/))
+Written by lbx(liubx8023@gmail.com), 2025. (Welcome to our [website](https://www.dfrobot.com/))

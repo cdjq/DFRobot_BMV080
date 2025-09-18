@@ -154,9 +154,10 @@ BMV080 目前是世界上最小的 PM2.5 芯片，它采用激光进行测量。
    * @param mode: 设置的模式可为：CONTINUOUS_MODE 或 DUTY_CYCLE_MODE
    *              CONTINUOUS_MODE: 传感器持续进行测量
    *              DUTY_CYCLE_MODE: 传感器会按照指定的时间间隔进行测量
-   * @return 1 成功
-   * @return 0 失败
-   * @return -1 参数错误,或者在这之前没有调用“openBmv080 或者 stopBmv080”函数。
+   * @return 0 成功
+   * @return -1 参数错误
+   * @return -2 调用顺序有误,或者在这之前没有调用“openBmv080 或者 stopBmv080”函数。
+   * @return other 其他错误，请参考bmv080_defs.h中的bmv080_status_code_t相关错误码。
    */
   int setBmv080Mode(uint8_t mode);
 
@@ -174,11 +175,11 @@ BMV080 目前是世界上最小的 PM2.5 芯片，它采用激光进行测量。
    * @brief 设置测量窗口时间。
    * @note 在占空循环模式下，该测量窗口也是传感器开启时间。
    * @param integration_time 测量积分时间，单位为毫秒（ms）。
-   * @return 1 成功
-   * @return 0 错误
+   * @return 0 成功
    * @return -1 integration_time不在有效范围内，必须大于等于1s
    * @return -2 integration_time 必须小于 duty_cycling_period 至少2s
    * @return -3 在这之前没有调用“openBmv080 或者 stopBmv080”函数。
+   * @return other 其他错误，请参考bmv080_defs.h中的bmv080_status_code_t相关错误码。
    */
   int setIntegrationTime(float integration_time);
 
@@ -196,11 +197,11 @@ BMV080 目前是世界上最小的 PM2.5 芯片，它采用激光进行测量。
    * @n 占空循环周期（积分时间和传感器关闭/休眠时间之和）。
    * @note 此值必须比积分时间至少大2秒。
    * @param duty_cycling_period 占空循环周期，单位为毫秒（ms）。
-   * @return 1 成功
-   * @return 0 错误
+   * @return 0 成功
    * @return -1 duty_cycling_period 不在有效范围内，必须大于等于12s
    * @return -2 duty_cycling_period 必须大于 integration_time 至少2s.
    * @return -3 传感器还在持续运行种，在这之前没有调用“openBmv080 或者 stopBmv080”函数。
+   * @return other 其他错误，请参考bmv080_defs.h中的bmv080_status_code_t相关错误码。
    */
   int setDutyCyclingPeriod(uint16_t duty_cycling_period);
 
@@ -301,4 +302,4 @@ raspberry pi       |              |       √      |             |
 
 ## 创作者
 
-Written by Alexander(ouki.wang@dfrobot.com), 2025. (Welcome to our [website](https://www.dfrobot.com/))
+作者: lbx(liubx8023@gmail.com), 2025. (欢迎访问我们的 [网站](https://www.dfrobot.com/))

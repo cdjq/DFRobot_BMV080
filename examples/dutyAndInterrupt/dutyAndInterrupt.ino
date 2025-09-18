@@ -1,6 +1,6 @@
 /*!
- * @file dutyCycRead.ino
- * @brief This routine uses the IIC or SPI interface to periodically read data, with a cycle of 20 seconds.
+ * @file dutyAndInterrupt.ino
+ * @brief This routine uses the IIC or SPI interface, the sensor operates in a periodic cycle mode and adopts the interrupt mode to obtain data. 
  * @n The obtained data include the current levels of PM1, PM2.5 and PM10 in the air.
  * @n The demo supports FireBeetle-ESP32-E, FireBeetle-ESP32-S3.
  * @details Experimental phenomenon: The read data will be output in the serial port monitor.
@@ -13,7 +13,7 @@
  * @url https://github.com/DFRobot/DFRobot_BMV080
  */
 
-#include "DFRobot_BMV080.h"
+ #include "DFRobot_BMV080.h"
 #include <string>
 
 SET_LOOP_TASK_STACK_SIZE(60 * 1024); // Set the stack size of the loop task to 60KB
@@ -42,12 +42,16 @@ DFRobot_BMV080_I2C sensor(&Wire, 0x57); // Create an instance of the DFRobot_BMV
 #define DUTY_CYCLE_PERIOD 20 // Duty cycle period in seconds. Must be greater than or equal to 12s.
 #define INTEGRATION_TIME 10.0f // Integration Time in seconds. Must be greater than or equal to 1.0s and less than DUTY_CYCLE_PERIOD 2s.
 
+#define IRQ_Pin 14 // Define the interrupt pin.
+
+bool dataFlag = false; // Create a flag to indicate whether new data is available.
+
 void setup() {
   char id[13]; // Variable to store the chip ID of the BMV080 sensor.
   Serial.begin(115200);
   while(!Serial) delay(100); // Wait for the serial port to be ready.
   // Initialize the sensor.
-  Serial.println("Periodic reading routine.");
+  Serial.println("The Continuous reading routine.");
   while(sensor.begin() != 0){
     Serial.println("Initialization of the sensor failed! Please confirm if the sensor chip connection is correct.");
     delay(1000);
@@ -60,8 +64,9 @@ void setup() {
   }
   Serial.println("open successful");
   // Get the chip ID of the BMV080 sensor.
-  sensor.getBmv080ID(id);
+  sensor.getBmv080ID(id); 
   Serial.println("Chip ID is:" + String(id));
+
   // Set the duty cycling period of the BMV080 sensor.
   // DUTY_CYCLE_PERIOD must be greater than 12 seconds.
   if(sensor.setDutyCyclingPeriod(DUTY_CYCLE_PERIOD)){
@@ -95,20 +100,39 @@ void setup() {
   }else{
     Serial.println("Mode setting successful");
   }
+  setInterruptPin();
 }
 
 // define the variables to store the PM data.
 float pm1,pm2_5,pm10;
 void loop() {
-  // Read the PM data from the sensor.
-  if(sensor.getBmv080Data(&pm1,&pm2_5,&pm10)){
+  // Check if new data is available.
+  // If the dataFlag is true, it means new data is available.
+  if(sensor.getBmv080Data(&pm1,&pm2_5,&pm10) && dataFlag){
     Serial.print("pm1:" + String(pm1) + "  " + "pm2.5:" + String(pm2_5) + "  " + "pm10:" + String(pm10));
-
     if(sensor.ifObstructed()){
-      Serial.print("  Obstructed The data may be invalid.");
+    Serial.print("  Obstructed The data may be invalid.");
     }
-
     Serial.println();
+    dataFlag = false;
   }
   delay(100);
+}
+
+// Function to set the interrupt pin.
+// This function checks if the interrupt pin is supported on the board and sets it up.
+void setInterruptPin(void){
+  if(digitalPinToInterrupt(IRQ_Pin) == -1){
+    Serial.println("Interrupt pin not supported on this board.");
+  }else{
+    Serial.println("Interrupt pin supported.");
+  }
+  pinMode(IRQ_Pin, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(IRQ_Pin), IRQ_handler, FALLING);
+}
+
+// Interrupt handler function
+void IRQ_handler(void)
+{
+  dataFlag = true;
 }

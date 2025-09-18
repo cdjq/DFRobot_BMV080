@@ -1,14 +1,14 @@
 /*!
- * @file interrupt.ino
- * @brief This routine uses the IIC interface and adopts the interrupt mode to obtain data. 
+ * @file consecutiveInterrupt.ino
+ * @brief This routine uses the IIC or SPI interface and adopts the interrupt mode to obtain data. 
  * @n When the sensor data is ready, an interrupt signal will be generated.
  * @n The obtained data include the current levels of PM1, PM2.5 and PM10 in the air.
- * @n The demo supports FireBeetle-ESP32-E, FireBeetle-ESP32-S3, and FireBeetle-ESP8266.
+ * @n The demo supports FireBeetle-ESP32-E, FireBeetle-ESP32-S3.
  * @details Experimental phenomenon: The read data will be output in the serial port monitor.
  * 
  * @copyright Copyright (c) 2010 DFRobot Co.Ltd (http://www.dfrobot.com)
  * @license The MIT License (MIT)
- * @author [Ouki](ouki.wang@dfrobot.com)
+ * @author [lbx](liubx8023@gmail.com)
  * @version V1.0
  * @date 2025-07-28
  * @url https://github.com/DFRobot/DFRobot_BMV080
@@ -20,6 +20,20 @@
 SET_LOOP_TASK_STACK_SIZE(60 * 1024); // Set the stack size of the loop task to 60KB
 
 //You can choose to use either the IIC interface or the SPI interface. The default is IIC. 
+/*
+ * address selection of I2C:
+ * --------------------------------------
+ * |    CSB    |    MISO    |  Address  |
+ * --------------------------------------
+ * |     0     |     0      |   0x54    |
+ * --------------------------------------
+ * |     0     |     1      |   0x55    |
+ * --------------------------------------
+ * |     1     |     0      |   0x56    |
+ * --------------------------------------
+ * |     1     |     1      |   0x57    |
+ * --------------------------------------
+ */
 DFRobot_BMV080_I2C sensor(&Wire, 0x57); // Create an instance of the DFRobot_BMV080_I2C class with the I2C address 0x57.
 
 /* If you want to use SPI, simply remove the following comments, and change the SPI_CS_PIN to the corresponding SPI CS pin.*/
@@ -50,9 +64,19 @@ void setup() {
   // Get the chip ID of the BMV080 sensor.
   sensor.getBmv080ID(id);
   Serial.println("Chip ID is:" + String(id));
+
   // Set the measurement mode to continuous mode.
-  if(sensor.setBmv080Mode(CONTINUOUS_MODE))
+  /*!
+   * @brief Set the measurement mode of the BMV080 sensor.
+   * @param mode The mode to set, either CONTINUOUS_MODE or DUTY_CYCLE_MODE
+   *              CONTINUOUS_MODE: Sensor takes measurements continuously
+   *              DUTY_CYCLE_MODE: Sensor takes measurements at specified intervals
+   */
+  if(sensor.setBmv080Mode(CONTINUOUS_MODE)){
+    Serial.println("Mode setting failed");
+  }else{
     Serial.println("Mode setting successful");
+  }
   // Set the interrupt pin.
   setInterruptPin();
 }
@@ -62,16 +86,13 @@ float pm1,pm2_5,pm10;
 void loop() {
   // Check if new data is available.
   // If the dataFlag is true, it means new data is available.
-  if(dataFlag){
-    dataFlag = false;
-    if(sensor.getBmv080Data(&pm1,&pm2_5,&pm10)){
-      Serial.print("pm1:" + String(pm1) + "  " + "pm2.5:" + String(pm2_5) + "  " + "pm10:" + String(pm10));
-
-      if(sensor.ifObstructed()){
-        Serial.print("  Obstructed The data may be invalid.");
-      }
-      Serial.println();
+  if(sensor.getBmv080Data(&pm1,&pm2_5,&pm10) && dataFlag){
+    Serial.print("pm1:" + String(pm1) + "  " + "pm2.5:" + String(pm2_5) + "  " + "pm10:" + String(pm10));  
+    if(sensor.ifObstructed()){
+      Serial.print("  Obstructed The data may be invalid.");
     }
+    Serial.println();
+    dataFlag = false;
   }
   delay(100);
 }

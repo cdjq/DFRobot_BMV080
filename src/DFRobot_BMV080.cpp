@@ -1,6 +1,20 @@
+/*!
+ * @file DFRobot_BMV080.cpp
+ * @brief Driver for BMV080 sensor
+ * @n Support IIC and SPI communication interfaces
+ * @n Used the official SDK of Bosch
+ * @n Can obtain PM1, PM2.5, PM10
+ * @copyright	Copyright (c) 2025 DFRobot Co.Ltd (http://www.dfrobot.com)
+ * @license The MIT License (MIT)
+ * @author [lbx](liubx8023@gmail.com)
+ * @version V1.0
+ * @date 2025-09-15
+ * @url https://github.com/DFRobot/DFRobot_BMV080
+ */
+
 #include "DFRobot_BMV080.h"
 
-int8_t DFRobot_BMV080::BMV080_write_16bit_cb(bmv080_sercom_handle_t sercom_handle, uint16_t header, const uint16_t* payload, uint16_t payload_length)
+int8_t DFRobot_BMV080::bmv080Write16BitCb(bmv080_sercom_handle_t sercom_handle, uint16_t header, const uint16_t* payload, uint16_t payload_length)
 {
   DFRobot_BMV080 *_pDev = (DFRobot_BMV080 *)sercom_handle;
   if(_pDev->devClass)
@@ -13,7 +27,7 @@ int8_t DFRobot_BMV080::BMV080_write_16bit_cb(bmv080_sercom_handle_t sercom_handl
   return E_BMV080_OK;
 }
 
-int8_t DFRobot_BMV080::BMV080_read_16bit_cb(bmv080_sercom_handle_t sercom_handle, uint16_t header, uint16_t* payload, uint16_t payload_length)
+int8_t DFRobot_BMV080::bmv080Read16BitCb(bmv080_sercom_handle_t sercom_handle, uint16_t header, uint16_t* payload, uint16_t payload_length)
 {
   DFRobot_BMV080 *_pDev = (DFRobot_BMV080 *)sercom_handle;
   if(_pDev->devClass)
@@ -22,32 +36,31 @@ int8_t DFRobot_BMV080::BMV080_read_16bit_cb(bmv080_sercom_handle_t sercom_handle
   return _pDev->readReg(header, payload, payload_length) == payload_length ? E_BMV080_OK : E_BMV080_ERROR_HW_READ;
 }
 
-int8_t DFRobot_BMV080::BMV080_delay_cb(uint32_t duration_in_ms)
+int8_t DFRobot_BMV080::bmv080DelayCb(uint32_t duration_in_ms)
 {
   delay(duration_in_ms);
 
   return E_BMV080_OK;
 }
 
-uint32_t DFRobot_BMV080::BMV080_delay_cycling_cb(void)
+uint32_t DFRobot_BMV080::bmv080DelayCyclingCb(void)
 {
   return millis();
 }
 
-void DFRobot_BMV080::getBmv080Data_cb(bmv080_output_t bmv080_output, void *cb_parameters)
+void DFRobot_BMV080::getBmv080DataCb(bmv080_output_t bmv080_output, void *cb_parameters)
 {
   ((DFRobot_BMV080 *)cb_parameters)->get_bmv080Data(bmv080_output);
 }
 
-int DFRobot_BMV080::openBmv080(void)
+uint16_t DFRobot_BMV080::openBmv080(void)
 {
   bmv080_status_code_t bmv080_status = bmv080_open(
-        &_bmv080_handle_class, (bmv080_sercom_handle_t)this, (bmv080_callback_read_t)BMV080_read_16bit_cb,
-        (bmv080_callback_write_t)BMV080_write_16bit_cb, (bmv080_callback_delay_t)BMV080_delay_cb);
+        &_bmv080_handle_class, (bmv080_sercom_handle_t)this, (bmv080_callback_read_t)bmv080Read16BitCb,
+        (bmv080_callback_write_t)bmv080Write16BitCb, (bmv080_callback_delay_t)bmv080DelayCb);
   //DBG("status is:" + String(bmv080_status));
   if(bmv080_status == E_BMV080_ERROR_PRECONDITION_UNSATISFIED) {
     DBG("bmv080_open failed, status is:" + String(bmv080_status));
-    return -1;
   }
   return bmv080_status;
 }
@@ -114,7 +127,7 @@ bool DFRobot_BMV080::getBmv080Data(float *PM1, float *PM2_5, float *PM10, bmv080
     return false;
   }
   bmv080_status_code_t bmv080_status =
-    bmv080_serve_interrupt(_bmv080_handle_class, (bmv080_callback_data_ready_t)getBmv080Data_cb, (void *)this);
+    bmv080_serve_interrupt(_bmv080_handle_class, (bmv080_callback_data_ready_t)getBmv080DataCb, (void *)this);
 
   if(bmv080_status != E_BMV080_OK) {
     return false;
@@ -139,13 +152,21 @@ int DFRobot_BMV080::setBmv080Mode(uint8_t mode)
     bmv080_status = bmv080_start_continuous_measurement(_bmv080_handle_class);
   }else if(mode == DUTY_CYCLE_MODE) {
     bmv080_duty_cycling_mode_t bmv080_duty_cycling_mode = E_BMV080_DUTY_CYCLING_MODE_0;
-    bmv080_status = bmv080_start_duty_cycling_measurement(_bmv080_handle_class, (bmv080_callback_tick_t)BMV080_delay_cycling_cb, bmv080_duty_cycling_mode);
+    bmv080_status = bmv080_start_duty_cycling_measurement(_bmv080_handle_class, (bmv080_callback_tick_t)bmv080DelayCyclingCb, bmv080_duty_cycling_mode);
   } else {
     DBG("setBmv080Mode failed, mode is invalid");
     return -1;
   }
+  if(bmv080_status != E_BMV080_OK) {
+    if(bmv080_status == E_BMV080_ERROR_PRECONDITION_UNSATISFIED) {
+      DBG("setBmv080Mode failed, precondition is unsatisfied");
+      return -2;
+    }
+    DBG("setBmv080Mode failed, status is:" + String(bmv080_status));
+    return bmv080_status;
+  }
 
-  return (bmv080_status == E_BMV080_OK);
+  return 0;
 }
 
 int DFRobot_BMV080::setIntegrationTime(float integration_time)
@@ -166,10 +187,10 @@ int DFRobot_BMV080::setIntegrationTime(float integration_time)
       return -3;
     }
     DBG("setIntegrationTime failed, status is:" + String(bmv080_status));
-    return false;
+    return bmv080_status;
   }
 
-  return true;
+  return 0;
 }
 
 float DFRobot_BMV080::getIntegrationTime(void)
@@ -180,7 +201,7 @@ float DFRobot_BMV080::getIntegrationTime(void)
 
   if(bmv080_status != E_BMV080_OK) {
     DBG("setIntegrationTime failed, status is:" + String(bmv080_status));
-    return false;
+    return NAN;
   }
 
   return integration_time;
@@ -204,9 +225,9 @@ int DFRobot_BMV080::setDutyCyclingPeriod(uint16_t duty_cycling_period)
       return -3;
     }
     DBG("setDutyCyclingPeriod failed, status is:" + String(bmv080_status));
-    return false;
+    return bmv080_status;
   }
-  return (bmv080_status == E_BMV080_OK);
+  return 0;
 }
 
 uint16_t DFRobot_BMV080::getDutyCyclingPeriod(void)
@@ -226,7 +247,7 @@ bool DFRobot_BMV080::setObstructionDetection(bool obstructed)
 
 int DFRobot_BMV080::getObstructionDetection(void)
 {
-  bool obstructed = false;
+  bool obstructed = 0;
   bmv080_status_code_t bmv080_status = bmv080_get_parameter(_bmv080_handle_class, "do_obstruction_detection", (void *)&obstructed);
 
   return (bmv080_status == E_BMV080_OK ? obstructed : -1);
@@ -246,7 +267,7 @@ bool DFRobot_BMV080::setDoVibrationFiltering(bool do_vibration_filtering)
 
 int DFRobot_BMV080::getDoVibrationFiltering(void)
 {
-  bool do_vibration_filtering = false;
+  bool do_vibration_filtering = 0;
   bmv080_status_code_t bmv080_status = bmv080_get_parameter(_bmv080_handle_class, "do_vibration_filtering", (void *)&do_vibration_filtering);
 
   return (bmv080_status == E_BMV080_OK ? do_vibration_filtering : -1);
@@ -266,9 +287,9 @@ int DFRobot_BMV080::setMeasurementAlgorithm(uint8_t measurement_algorithm)
       return -3;
     }
     DBG("setMeasurementAlgorithm failed, status is:" + String(bmv080_status));
-    return false;
+    return bmv080_status;
   }
-  return (bmv080_status == E_BMV080_OK);
+  return 0;
 }
 uint8_t DFRobot_BMV080::getMeasurementAlgorithm(void)
 {

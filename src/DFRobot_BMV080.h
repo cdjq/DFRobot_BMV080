@@ -58,10 +58,9 @@ public:
    * @note This function usually only needs to be called once.
    * @note It must be called before any other functions that interact with the sensor.
    * @return 0 successful.
-   * @return -1 error, The function bar has an error in the order.The function closeBmv080 has been called multiple times or has not been called at all.
    * @return other values. See the bmv080_status_code_t enumeration in bmv080_defs.h for details.
    */
-  int openBmv080(void);
+  uint16_t openBmv080(void);
 
   /**
    * @fn closeBmv080
@@ -126,13 +125,14 @@ public:
 
   /**
    * @fn setBmv080Mode
-   * @brief Set the BMV080 sensor's mode.
+   * @brief Set the BMV080 sensor's mode.After calling this function, the sensor will start to collect data.
    * @param mode: The mode to set, either CONTINUOUS_MODE or DUTY_CYCLE_MODE
    *              CONTINUOUS_MODE: Sensor takes measurements continuously
    *              DUTY_CYCLE_MODE: Sensor takes measurements at specified intervals
-   * @return 1 successful
-   * @return 0 error
-   * @return -1 mode is invalid, or not call openBmv080 or stopBmv080 function before.
+   * @return 0 successful
+   * @return -1 mode is invalid
+   * @return -2 precondition is unsatisfied (for example, if the sensor is currently running in continuous mode, you should stop the measurement first).
+   * @return other error, see the bmv080_status_code_t enumeration in bmv080_defs.h for details.
    */
   int setBmv080Mode(uint8_t mode);
 
@@ -150,11 +150,11 @@ public:
    * @brief Set the measurement window.
    * @note In duty cycling mode, this measurement window is also the sensor ON time.
    * @param integration_time The measurement integration time in seconds (s).
-   * @return 1 successful
-   * @return 0 error
+   * @return 0 successful
    * @return -1 integration_time is invalid, must be greater than or equal to 1.0s
    * @return -2 duty_cycling_period must larger than integration_time by at least 2 seconds.
    * @return -3 precondition is unsatisfied (for example, if the sensor is currently running in continuous mode, you should stop the measurement first).
+   * @return other error, see the bmv080_status_code_t enumeration in bmv080_defs.h for details.
    */
   int setIntegrationTime(float integration_time);
 
@@ -162,7 +162,7 @@ public:
    * @fn getIntegrationTime
    * @brief Get the current integration time.
    * @return The current integration time in seconds (s).
-   * @return 0 error, or not call openBmv080 or stopBmv080 function before.
+   * @return NAN error, or not call openBmv080 or stopBmv080 function before.
    */
   float getIntegrationTime(void);
 
@@ -172,11 +172,11 @@ public:
    * @n Duty cycling period (sum of integration time and sensor OFF / sleep time).
    * @note This must be greater than integration time by at least 2 seconds.
    * @param duty_cycling_period The duty cycling period in seconds (s).
-   * @return 1 successful
-   * @return 0 error
+   * @return 0 successful
    * @return -1 duty_cycling_period is invalid, must be greater than or equal to 12s
    * @return -2 integration_time must less than duty_cycling_period by at least 2 seconds.
    * @return -3 precondition is unsatisfied (for example, if the sensor is currently running in continuous mode, you should stop the measurement first).
+   * @return other error, see the bmv080_status_code_t enumeration in bmv080_defs.h for details.
    */
   int setDutyCyclingPeriod(uint16_t duty_cycling_period);
 
@@ -239,10 +239,10 @@ public:
    *                              FAST_RESPONSE //Fast response,suitable for scenarios requiring quick response
    *                              BALANCED //Balanced, suitable for scenarios where a balance needs to be struck between precision and rapid response
    *                              HIGH_PRECISION //High precision, suitable for scenarios requiring high accuracy
-   * @return 1 successful
-   * @return 0 error
+   * @return 0 successful
    * @return -1 measurement_algorithm is invalid
    * @return -3 precondition is unsatisfied (for example, if the sensor is currently running in continuous mode, you should stop the measurement first).
+   * @return other error, see the bmv080_status_code_t enumeration in bmv080_defs.h for details.
    */
   int setMeasurementAlgorithm(uint8_t measurement_algorithm);
 
@@ -263,7 +263,7 @@ private:
   virtual uint8_t writeReg(uint16_t reg, const uint16_t* pBuf, size_t size) = 0;
   virtual uint8_t readReg(uint16_t reg, uint16_t* pBuf, size_t size) = 0;
   /**
-   * @fn BMV080_write_16bit_cb
+   * @fn bmv080Write16BitCb
    * @brief Callback function for writing 16-bit data to the BMV080 sensor
    * @n This function is used to write 16-bit data to the BMV080 sensor via a serial communication interface.
    * @n This function is used internally by the BMV080 driver to write data to the sensor.
@@ -273,10 +273,10 @@ private:
    * @param size: Size of the data to write in bytes
    * @return Returns E_BMV080_OK if successful, otherwise returns a BMV080 status code.
    */
-  static int8_t BMV080_write_16bit_cb(bmv080_sercom_handle_t, uint16_t, const uint16_t*, uint16_t);
+  static int8_t bmv080Write16BitCb(bmv080_sercom_handle_t, uint16_t, const uint16_t*, uint16_t);
 
   /**
-   * @fn BMV080_read_16bit_cb
+   * @fn bmv080Read16BitCb
    * @brief Callback function for reading 16-bit data from the BMV080 sensor
    * @note This function is used to read 16-bit data from the BMV080 sensor via a serial communication interface.
    * @note This function is used internally by the BMV080 driver to read data from the sensor.
@@ -286,39 +286,39 @@ private:
    * @param size: Size of the data to read in bytes
    * @return Returns E_BMV080_OK if successful, otherwise returns a BMV080 status code.
    */
-  static int8_t BMV080_read_16bit_cb(bmv080_sercom_handle_t, uint16_t, uint16_t*, uint16_t);
+  static int8_t bmv080Read16BitCb(bmv080_sercom_handle_t, uint16_t, uint16_t*, uint16_t);
 
   /**
-   * @fn getBmv080Data_cb
+   * @fn getBmv080DataCb
    * @brief Callback function to handle BMV080 data
    * @note This function is called when new data is available from the BMV080 sensor.
    * @param bmv080_output: The output data from the BMV080 sensor
    * @param cb_parameters: Pointer to user-defined parameters for the callback
    */
-  static void getBmv080Data_cb(bmv080_output_t bmv080_output, void *cb_parameters);
+  static void getBmv080DataCb(bmv080_output_t bmv080_output, void *cb_parameters);
 
   /**
-   * @fn BMV080_delay_cb
+   * @fn bmv080DelayCb
    * @brief Callback function to handle delay
    * @note This function is called when the BMV080 sensor needs to delay.
    * @param delay_ms: The delay in milliseconds
    * @return int8_t: The status of the delay
    */
-  static int8_t BMV080_delay_cb(uint32_t);
+  static int8_t bmv080DelayCb(uint32_t);
 
   /**
-   * @fn BMV080_delay_cycling_cb
+   * @fn bmv080DelayCyclingCb
    * @brief Callback function to handle delay for duty cycling
    * @note This function is called when the BMV080 sensor needs to delay for duty cycling.
    * @return uint32_t: The current time in milliseconds
    */
-  static uint32_t BMV080_delay_cycling_cb(void);
+  static uint32_t bmv080DelayCyclingCb(void);
 
   /**
    * @fn get_bmv080Data
    * @brief Assign the data of BMV080 to the variable bmv080_output_t.
    * @param bmv080_output: Output structure containing the BMV080 sensor data
-   * @note This fuction is called in the callback function getBmv080Data_cb.
+   * @note This fuction is called in the callback function getBmv080DataCb.
    * @return bool: Returns true if successful, otherwise returns false.
    */
   bool get_bmv080Data(bmv080_output_t bmv080_output);
