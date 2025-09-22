@@ -242,7 +242,7 @@ bool DFRobot_BMV080::setObstructionDetection(bool obstructed)
 {
   bmv080_status_code_t bmv080_status = bmv080_set_parameter(_bmv080_handle_class, "do_obstruction_detection", (void *)&obstructed);
 
-  return (bmv080_status == E_BMV080_OK ? obstructed : false);
+  return (bmv080_status == E_BMV080_OK);
 }
 
 int DFRobot_BMV080::getObstructionDetection(void)

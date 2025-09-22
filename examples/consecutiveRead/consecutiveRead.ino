@@ -61,6 +61,39 @@ void setup() {
   sensor.getBmv080ID(id); 
   Serial.println("Chip ID is:" + String(id));
 
+  // Set the obstruction detection feature of the sensor to true.
+  /*!
+   * @brief Enable the obstruction detection feature of the BMV080 sensor.
+   * @n When this function is enabled, if there is any obstruction above the sensor, a prompt message indicating the obstruction will be displayed.
+   * @param obstructed Set to true to enable obstruction detection, false to disable it.
+   * @return 1 successful, other error.
+   */
+  sensor.setObstructionDetection(true); 
+
+  // Set the vibration filtering feature of the sensor to true.
+  /*!
+   * @brief Enable the vibration filtering feature of the BMV080 sensor.
+   * @n When this function is enabled, the sensor will filter out vibrations and provide more stable readings.
+   * @param do_vibration_filtering Set to true to enable vibration filtering, false to disable it.
+   * @return 1 successful, other error.
+   */
+  sensor.setDoVibrationFiltering(true); 
+
+  // Set the measurement algorithm parameter of the sensor to HIGH_PRECISION.
+  /*!
+   * @brief Set the measurement algorithm of the BMV080 sensor.
+   * @param measurement_algorithm The measurement algorithm to use.
+   *                              FAST_RESPONSE //Fast response,suitable for scenarios requiring quick response
+   *                              BALANCED //Balanced, suitable for scenarios where a balance needs to be struck between precision and rapid response
+   *                              HIGH_PRECISION //High precision, suitable for scenarios requiring high accuracy
+   * @return 0 successful, other error.
+   */
+  if(0 == sensor.setMeasurementAlgorithm(BALANCED)){
+    Serial.println("Set measurement algorithm to BALANCED successfully.");
+  } else {
+    Serial.println("Failed to set measurement algorithm.");
+  }
+
   // Set the measurement mode to continuous mode.
   /*!
    * @brief Set the measurement mode of the BMV080 sensor.
@@ -69,10 +102,10 @@ void setup() {
    *              DUTY_CYCLE_MODE: Sensor takes measurements at specified intervals
    * @return 0 successful, other error.
    */
-  if(sensor.setBmv080Mode(CONTINUOUS_MODE)){
-    Serial.println("Mode setting failed");
+  if(0 == sensor.setBmv080Mode(CONTINUOUS_MODE)){
+    Serial.println("Mode setting successful.");
   }else{
-    Serial.println("Mode setting successful");
+    Serial.println("Mode setting failed.");
   }
     
 }

@@ -62,6 +62,7 @@ void setup() {
   // Get the chip ID of the BMV080 sensor.
   sensor.getBmv080ID(id);
   Serial.println("Chip ID is:" + String(id));
+
   // Set the duty cycling period of the BMV080 sensor.
   // DUTY_CYCLE_PERIOD must be greater than 12 seconds.
   if(sensor.setDutyCyclingPeriod(DUTY_CYCLE_PERIOD)){
@@ -69,6 +70,7 @@ void setup() {
   }
   Serial.print("The measurement period is set to:");
   Serial.println(sensor.getDutyCyclingPeriod());
+
   // Set the integration time of the BMV080 sensor.
   // INTEGRATION_TIME must be less than DUTY_CYCLE_PERIOD by at least 2 seconds.
   if(sensor.setIntegrationTime(INTEGRATION_TIME)){
@@ -76,24 +78,52 @@ void setup() {
   }
   Serial.print("The integration time is set to:");
   Serial.println(sensor.getIntegrationTime());
-  // enable obstacle detection.
-  if(sensor.setObstructionDetection(true)){
-    Serial.println("Obstacle detection enable sucessful.");
-  }else{
-    Serial.println("Obstacle detection failed to open.");
+  
+  // Set the obstruction detection feature of the sensor to true.
+  /*!
+   * @brief Enable the obstruction detection feature of the BMV080 sensor.
+   * @n When this function is enabled, if there is any obstruction above the sensor, a prompt message indicating the obstruction will be displayed.
+   * @param obstructed Set to true to enable obstruction detection, false to disable it.
+   * @return 1 successful, other error.
+   */
+  sensor.setObstructionDetection(true); 
+
+  // Set the vibration filtering feature of the sensor to true.
+  /*!
+   * @brief Enable the vibration filtering feature of the BMV080 sensor.
+   * @n When this function is enabled, the sensor will filter out vibrations and provide more stable readings.
+   * @param do_vibration_filtering Set to true to enable vibration filtering, false to disable it.
+   * @return 1 successful, other error.
+   */
+  sensor.setDoVibrationFiltering(true); 
+
+  // Set the measurement algorithm parameter of the sensor to HIGH_PRECISION.
+  /*!
+   * @brief Set the measurement algorithm of the BMV080 sensor.
+   * @param measurement_algorithm The measurement algorithm to use.
+   *                              FAST_RESPONSE //Fast response,suitable for scenarios requiring quick response
+   *                              BALANCED //Balanced, suitable for scenarios where a balance needs to be struck between precision and rapid response
+   *                              HIGH_PRECISION //High precision, suitable for scenarios requiring high accuracy
+   * @return 0 successful, other error.
+   */
+  if(0 == sensor.setMeasurementAlgorithm(BALANCED)){
+    Serial.println("Set measurement algorithm to BALANCED successfully.");
+  } else {
+    Serial.println("Failed to set measurement algorithm.");
   }
 
   // Set the measurement mode to continuous mode.
+  // In the cycle mode, it must be set to DUTY_CYCLE_MODE.
   /*!
    * @brief Set the measurement mode of the BMV080 sensor.
    * @param mode The mode to set, either CONTINUOUS_MODE or DUTY_CYCLE_MODE
    *              CONTINUOUS_MODE: Sensor takes measurements continuously
    *              DUTY_CYCLE_MODE: Sensor takes measurements at specified intervals
    */
-  if(sensor.setBmv080Mode(DUTY_CYCLE_MODE)){
-    Serial.println("Mode setting failed");
-  }else{
+  if(0 == sensor.setBmv080Mode(DUTY_CYCLE_MODE)){
     Serial.println("Mode setting successful");
+  }else{
+    Serial.println("Mode setting failed");
   }
 }
 
